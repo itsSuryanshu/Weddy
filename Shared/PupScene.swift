@@ -66,6 +66,12 @@ enum PupScene: String, Codable, CaseIterable, Hashable {
     var skyTop: Color { Color(px: skyTopHex) }
     var skyBottom: Color { Color(px: skyBottomHex) }
 
+    /// Ink for the weather text over the scene: white everywhere except the
+    /// near-white snow field, where it flips to a deep slate blue.
+    var ink: Color {
+        self == .snow ? Color(px: 0x33628F) : .white
+    }
+
     /// Maps an Open-Meteo WMO weather code + daylight flag + temperature to a scene.
     static func from(wmoCode: Int, isDay: Bool, temperatureC: Double) -> PupScene {
         let base: PupScene

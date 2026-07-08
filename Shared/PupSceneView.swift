@@ -54,8 +54,12 @@ struct SceneComposer {
     /// Where the dog's paws rest (slightly inside the front grass for depth).
     private let feetY = 55
     /// The dog is the hero — chunkier pixels than the scenery, like the
-    /// reference art where the pup dominates the frame.
-    private let dogScale = 1.5
+    /// reference art where the pup dominates the frame. The sit sprite is
+    /// much taller than the side-view poses, so it gets a smaller scale to
+    /// keep the dog a consistent size as it switches poses.
+    private var dogScale: Double {
+        layout.dogAction == .sit ? 1.2 : 1.5
+    }
 
     private let style: SceneStyle
 
@@ -222,13 +226,21 @@ struct SceneComposer {
                     y: -8)
         }
         if style.butterflies {
-            var rng = PixelRandom(seed: layout.worldSeed ^ 0xB077E7F1)
+            // Butterflies flutter (flutterSeed re-rolls every update) and
+            // cluster off the dog's nose, so it reads as a chase.
+            var rng = PixelRandom(seed: layout.flutterSeed)
             let wings = [PupSprites.butterflyBlue, PupSprites.butterflyYellow, PupSprites.butterflyOrange]
-            let spots = [(-9.0, 6.0), (width + 2, 0.0), (width - 12, -7.0)]
+            let dir: Double = layout.dogFacesLeft ? -1 : 1
+            let nose = layout.dogFacesLeft ? 0.0 : width
+            let spots = [
+                (nose + dir * 5, 0.0),         // just off the nose
+                (nose + dir * 13, -7.0),       // leading the chase
+                (nose - dir * (width * 0.4), -12.0),  // straggler over the back
+            ]
             for (i, spot) in spots.enumerated() {
                 p.stamp(wings[i % wings.count],
-                        x: spot.0 + rng.double(-2...2),
-                        y: spot.1 + rng.double(-2...2),
+                        x: spot.0 + rng.double(-3...3) - 3,
+                        y: spot.1 + rng.double(-3...3),
                         flipX: rng.bool())
             }
         }

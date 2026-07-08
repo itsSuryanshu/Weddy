@@ -52,6 +52,28 @@ struct RenderScenes {
                 .frame(width: 380, height: 120)
             write(view, to: outDir, name: scene.rawValue)
         }
+
+        // Mock lock-screen cards with the weather badge (mirrors the widget's
+        // WeatherBadge — kept in sync by eye; the badge itself lives in the
+        // widget target, which doesn't compile on macOS).
+        for (scene, temp) in [(PupScene.warmDay, 26.0), (.snow, -3), (.night, 12)] {
+            let card = PupSceneView(scene: scene, layout: .preview(for: scene), minHeight: 120)
+                .frame(width: 380, height: 120)
+                .overlay(alignment: .bottomTrailing) {
+                    VStack(alignment: .trailing, spacing: -4) {
+                        Text("\(Int(temp.rounded()))°")
+                            .font(.system(size: 30, weight: .heavy, design: .rounded))
+                        Text(scene.label)
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(scene.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .padding(.trailing, 10)
+                    .padding(.bottom, 6)
+                }
+            write(card, to: outDir, name: "card-\(scene.rawValue)")
+        }
     }
 
     @MainActor

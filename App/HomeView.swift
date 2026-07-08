@@ -7,8 +7,9 @@ struct HomeView: View {
     @State private var previewLayout = SceneLayout.makeInitial(for: .clearDay)
 
     /// In-app preview wanders much faster than the Live Activity so the
-    /// scene feels alive while you watch it.
-    private let previewTimer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+    /// scene feels alive while you watch it — every few seconds the dog
+    /// hops to a new spot and the butterflies flutter ahead of it.
+    private let previewTimer = Timer.publish(every: 3, on: .main, in: .common).autoconnect()
 
     private var displayedScene: PupScene {
         previewScene ?? manager.scene
