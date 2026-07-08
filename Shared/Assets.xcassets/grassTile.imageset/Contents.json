@@ -1,0 +1,12 @@
+{
+  "images": [
+    {
+      "filename": "grassTile.png",
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}
