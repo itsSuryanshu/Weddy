@@ -100,8 +100,7 @@ final class LiveActivityManager {
         layout = SceneLayout.makeInitial(for: weather?.scene ?? .clearDay)
         let state = contentState(
             scene: weather?.scene ?? .clearDay,
-            temperatureC: weather?.temperatureC ?? 20,
-            placeName: placeName
+            temperatureC: weather?.temperatureC ?? 20
         )
 
         do {
@@ -156,8 +155,7 @@ final class LiveActivityManager {
         let scene = currentWeather?.scene ?? .clearDay
         layout = SceneLayout.wander(from: layout, scene: scene)
         let state = contentState(scene: scene,
-                                 temperatureC: currentWeather?.temperatureC ?? 20,
-                                 placeName: placeName)
+                                 temperatureC: currentWeather?.temperatureC ?? 20)
         await activity.update(
             .init(state: state, staleDate: Date(timeIntervalSinceNow: 3 * 3600))
         )
@@ -194,11 +192,7 @@ final class LiveActivityManager {
         // Every update doubles as a wander tick so the dog also moves on
         // background refreshes, not just on the foreground timer.
         layout = SceneLayout.wander(from: layout, scene: weather.scene)
-        let state = contentState(
-            scene: weather.scene,
-            temperatureC: weather.temperatureC,
-            placeName: placeName
-        )
+        let state = contentState(scene: weather.scene, temperatureC: weather.temperatureC)
         await activity.update(
             .init(state: state, staleDate: Date(timeIntervalSinceNow: 3 * 3600))
         )
@@ -206,13 +200,11 @@ final class LiveActivityManager {
 
     private func contentState(
         scene: PupScene,
-        temperatureC: Double,
-        placeName: String?
+        temperatureC: Double
     ) -> PupActivityAttributes.ContentState {
         .init(
             scene: scene,
             temperatureC: temperatureC,
-            placeName: placeName,
             updatedAt: .now,
             layout: layout
         )

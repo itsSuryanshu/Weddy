@@ -16,6 +16,9 @@ enum DogAction: String, Codable, Hashable {
 struct SceneLayout: Codable, Hashable {
     /// Scatters trees, clouds, stars, flowers. Stable across wander updates.
     var worldSeed: UInt64
+    /// Re-rolled on every wander: flutters the butterflies to fresh spots in
+    /// front of the dog, so each update reads as the dog chasing them.
+    var flutterSeed: UInt64
     /// Dog anchor across the field, 0 (left) … 1 (right).
     var dogUnit: Double
     var dogFacesLeft: Bool
@@ -41,6 +44,7 @@ struct SceneLayout: Codable, Hashable {
     /// A fixed layout for previews and tests.
     static func preview(for scene: PupScene) -> SceneLayout {
         SceneLayout(worldSeed: 0xC0FFEE,
+                    flutterSeed: 0xF107,
                     dogUnit: 0.38,
                     dogFacesLeft: false,
                     dogAction: actions(for: scene)[0])
@@ -66,6 +70,7 @@ struct SceneLayout: Codable, Hashable {
         let options = actions(for: scene)
         let action = options[Int.random(in: 0..<options.count, using: &rng)]
         return SceneLayout(worldSeed: seed,
+                           flutterSeed: UInt64.random(in: 1...UInt64.max, using: &rng),
                            dogUnit: unit,
                            dogFacesLeft: facesLeft,
                            dogAction: action)
