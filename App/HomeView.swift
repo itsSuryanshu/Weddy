@@ -185,16 +185,31 @@ struct HomeView: View {
         } label: {
             Image(systemName: "plus")
                 .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(.orange)
                 .frame(width: 56, height: 56)
-                .background(Circle().fill(Color.accentColor))
-                .shadow(radius: 4, y: 2)
         }
+        .modifier(GlassButtonModifier())
         .padding(.trailing, 20)
         .padding(.bottom, 20)
         .accessibilityLabel("Add location")
         .disabled(manager.trackedLocations.count >= LiveActivityManager.maxTrackedLocations)
         .opacity(manager.trackedLocations.count >= LiveActivityManager.maxTrackedLocations ? 0.4 : 1)
+    }
+}
+
+/// Liquid Glass wasn't introduced until iOS 26; the app supports back to 17,
+/// so older runtimes fall back to a tinted material that reads the same way.
+private struct GlassButtonModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.glassEffect(.regular.tint(.orange.opacity(0.6)).interactive(), in: .circle)
+        } else {
+            content
+                .background(.orange.opacity(0.35), in: Circle())
+                .background(.ultraThinMaterial, in: Circle())
+                .overlay(Circle().strokeBorder(.orange.opacity(0.5), lineWidth: 1))
+                .shadow(radius: 4, y: 2)
+        }
     }
 }
 
