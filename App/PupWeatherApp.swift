@@ -10,7 +10,7 @@ struct PupWeatherApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            RootView()
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
