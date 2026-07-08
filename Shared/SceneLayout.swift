@@ -33,7 +33,7 @@ struct SceneLayout: Codable, Hashable {
         case .rain, .thunder: [.trot, .sit, .trot]
         case .snow: [.jump, .trot, .sit]
         case .fog: [.sniff, .trot, .sit, .trot]
-        case .night: [.sleep]
+        case .rainNight, .thunderNight, .snowNight, .fogNight, .night: [.sleep]
         }
     }
 
