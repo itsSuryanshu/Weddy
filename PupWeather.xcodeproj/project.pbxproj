@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		04DC4BA9FBF29E2B54F54AEE /* LocationPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3B6C3AEF68E44C22B771714 /* LocationPickerView.swift */; };
 		0DFCEE25DAA4FF9180549D24 /* PupWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 36A479A67347A56C46AB4B07 /* PupWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		0EE791FDE3CAD4E42AB048A2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1EF19C8A9DD71DC329B9312B /* Assets.xcassets */; };
 		0FAC15B989FD87E2CBE74D0C /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7A22FAA84C8C116CFDB0E4 /* WeatherService.swift */; };
@@ -14,6 +15,7 @@
 		1D4A27CECA4973039B5E310A /* PupSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62934B26174F1E3D146C4894 /* PupSceneView.swift */; };
 		22EEED3C7138114083856D85 /* PupScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A16A964D377252D825DC885 /* PupScene.swift */; };
 		24B543C2273495E1D5FBD7CF /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2B14F47ADF83B9F25075B02 /* LocationService.swift */; };
+		2E14D4D66C212832DB7F650B /* GeocodingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CACCA1307D2515078DDA543 /* GeocodingService.swift */; };
 		4065A67AA56BF0F679B66D6F /* SceneLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C503411BFEDE5A1F1101D6A8 /* SceneLayout.swift */; };
 		4079A8A5CBC7B0E124545A74 /* PixelArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 302C44836EC19F4329761704 /* PixelArt.swift */; };
 		54B6E7E4E12A2B7C4BA56F22 /* PupScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A16A964D377252D825DC885 /* PupScene.swift */; };
@@ -29,6 +31,7 @@
 		D40CB9E2106746B5DC31D4C1 /* SceneLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C503411BFEDE5A1F1101D6A8 /* SceneLayout.swift */; };
 		D4894A5ABE0A5604833551B5 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED2482957844C8EC282578C /* HomeView.swift */; };
 		E3D97511640D45455EA3A34E /* PupActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7EA3BD8549712055B6A798 /* PupActivityAttributes.swift */; };
+		E659E2016F3536A2139FA28E /* LocationSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD17436F4F903825E0EE8C2 /* LocationSelection.swift */; };
 		EF3173D5DC6635E1B35D939E /* PupActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7EA3BD8549712055B6A798 /* PupActivityAttributes.swift */; };
 /* End PBXBuildFile section */
 
@@ -57,28 +60,47 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0383549FA605BA1984B62795 /* rain.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = rain.png; sourceTree = "<group>"; };
 		040762CD10A98E61A21FE45A /* PupWeatherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupWeatherApp.swift; sourceTree = "<group>"; };
 		0603FA5AE3F766DBF4487232 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		0607C4C37955196FAA0C3C7E /* PupSprites.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupSprites.swift; sourceTree = "<group>"; };
+		09354249541301A14F15E179 /* night.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = night.png; sourceTree = "<group>"; };
 		146C4919BA8276AA99C9D7CB /* PupWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PupWidgetExtension.entitlements; sourceTree = "<group>"; };
 		1EF19C8A9DD71DC329B9312B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		24C722ECE128B6943F355804 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		264C5C97047C39AD40009F0D /* snow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = snow.png; sourceTree = "<group>"; };
+		2A6BA65563636BC378CEE720 /* sprite-tree.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sprite-tree.png"; sourceTree = "<group>"; };
 		302C44836EC19F4329761704 /* PixelArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelArt.swift; sourceTree = "<group>"; };
 		35290F392E269E00DCBFA4C8 /* PupWeather.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PupWeather.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		36A479A67347A56C46AB4B07 /* PupWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PupWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FF42F039116C9D5827A8339 /* render_scenes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = render_scenes.swift; sourceTree = "<group>"; };
+		4304DBD7B8C4E3D26B5208BA /* thunder.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = thunder.png; sourceTree = "<group>"; };
+		4A45F50D8334DFF9656D1DEA /* warmDay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = warmDay.png; sourceTree = "<group>"; };
+		4CACCA1307D2515078DDA543 /* GeocodingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeocodingService.swift; sourceTree = "<group>"; };
 		4ED2482957844C8EC282578C /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		500D7A6FFD718680CCACA8DB /* PupLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupLiveActivity.swift; sourceTree = "<group>"; };
+		52F635F9C17C39CD5A77F3E9 /* sprite-dogSleep.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sprite-dogSleep.png"; sourceTree = "<group>"; };
 		62934B26174F1E3D146C4894 /* PupSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupSceneView.swift; sourceTree = "<group>"; };
 		671ACE4C6B83FA7D1C18C129 /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
 		6F7EA3BD8549712055B6A798 /* PupActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupActivityAttributes.swift; sourceTree = "<group>"; };
 		7A16A964D377252D825DC885 /* PupScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupScene.swift; sourceTree = "<group>"; };
+		7DD189459A64696398222970 /* sprite-dogJump.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sprite-dogJump.png"; sourceTree = "<group>"; };
 		817C837D554B686FAC756BCD /* BackgroundRefresher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRefresher.swift; sourceTree = "<group>"; };
 		84534D778F22B2EB91B6D234 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		8B7A22FAA84C8C116CFDB0E4 /* WeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherService.swift; sourceTree = "<group>"; };
 		9FE4E656AE9FBD9D42B8AEB0 /* PupWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupWidgetBundle.swift; sourceTree = "<group>"; };
+		A10A231E9DD550497A34A6E5 /* sprite-dogTrot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sprite-dogTrot.png"; sourceTree = "<group>"; };
+		A8DD2F79DAC80996CB81E127 /* sprite-dogSit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sprite-dogSit.png"; sourceTree = "<group>"; };
 		ADA351C33F445DBB8D2BD075 /* PupWeather.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PupWeather.entitlements; sourceTree = "<group>"; };
 		B2B14F47ADF83B9F25075B02 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
+		B3B6C3AEF68E44C22B771714 /* LocationPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPickerView.swift; sourceTree = "<group>"; };
+		BF39CD35B5FD3D6414106AB1 /* fog.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = fog.png; sourceTree = "<group>"; };
 		C503411BFEDE5A1F1101D6A8 /* SceneLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneLayout.swift; sourceTree = "<group>"; };
+		DFED36CD2C6E7EA4F3315CF7 /* cloudy.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cloudy.png; sourceTree = "<group>"; };
+		EAD17436F4F903825E0EE8C2 /* LocationSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSelection.swift; sourceTree = "<group>"; };
+		ED271358054A246F41CCF12A /* sprite-dogSniff.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sprite-dogSniff.png"; sourceTree = "<group>"; };
+		F785308B72B848011B4666A8 /* clearDay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = clearDay.png; sourceTree = "<group>"; };
+		FFE1DDF87C1BE4775533DAC9 /* sprite-butterfly.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sprite-butterfly.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -109,14 +131,39 @@
 			isa = PBXGroup;
 			children = (
 				817C837D554B686FAC756BCD /* BackgroundRefresher.swift */,
+				4CACCA1307D2515078DDA543 /* GeocodingService.swift */,
 				4ED2482957844C8EC282578C /* HomeView.swift */,
 				24C722ECE128B6943F355804 /* Info.plist */,
 				671ACE4C6B83FA7D1C18C129 /* LiveActivityManager.swift */,
+				B3B6C3AEF68E44C22B771714 /* LocationPickerView.swift */,
+				EAD17436F4F903825E0EE8C2 /* LocationSelection.swift */,
 				B2B14F47ADF83B9F25075B02 /* LocationService.swift */,
 				040762CD10A98E61A21FE45A /* PupWeatherApp.swift */,
 				8B7A22FAA84C8C116CFDB0E4 /* WeatherService.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		78605FFAF2E6AC568D72B5AD /* out */ = {
+			isa = PBXGroup;
+			children = (
+				F785308B72B848011B4666A8 /* clearDay.png */,
+				DFED36CD2C6E7EA4F3315CF7 /* cloudy.png */,
+				BF39CD35B5FD3D6414106AB1 /* fog.png */,
+				09354249541301A14F15E179 /* night.png */,
+				0383549FA605BA1984B62795 /* rain.png */,
+				264C5C97047C39AD40009F0D /* snow.png */,
+				FFE1DDF87C1BE4775533DAC9 /* sprite-butterfly.png */,
+				7DD189459A64696398222970 /* sprite-dogJump.png */,
+				A8DD2F79DAC80996CB81E127 /* sprite-dogSit.png */,
+				52F635F9C17C39CD5A77F3E9 /* sprite-dogSleep.png */,
+				ED271358054A246F41CCF12A /* sprite-dogSniff.png */,
+				A10A231E9DD550497A34A6E5 /* sprite-dogTrot.png */,
+				2A6BA65563636BC378CEE720 /* sprite-tree.png */,
+				4304DBD7B8C4E3D26B5208BA /* thunder.png */,
+				4A45F50D8334DFF9656D1DEA /* warmDay.png */,
+			);
+			path = out;
 			sourceTree = "<group>";
 		};
 		8E5C4AA03BDAC8B6E1246EB3 /* Shared */ = {
@@ -146,6 +193,8 @@
 		EDC1CC9BA9DCE14C8E0FCC31 /* tools */ = {
 			isa = PBXGroup;
 			children = (
+				3FF42F039116C9D5827A8339 /* render_scenes.swift */,
+				78605FFAF2E6AC568D72B5AD /* out */,
 			);
 			path = tools;
 			sourceTree = "<group>";
@@ -255,8 +304,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				BB77100BC5E707824FF2EE22 /* BackgroundRefresher.swift in Sources */,
+				2E14D4D66C212832DB7F650B /* GeocodingService.swift in Sources */,
 				D4894A5ABE0A5604833551B5 /* HomeView.swift in Sources */,
 				18C5613BA96893751A5579D8 /* LiveActivityManager.swift in Sources */,
+				04DC4BA9FBF29E2B54F54AEE /* LocationPickerView.swift in Sources */,
+				E659E2016F3536A2139FA28E /* LocationSelection.swift in Sources */,
 				24B543C2273495E1D5FBD7CF /* LocationService.swift in Sources */,
 				4079A8A5CBC7B0E124545A74 /* PixelArt.swift in Sources */,
 				EF3173D5DC6635E1B35D939E /* PupActivityAttributes.swift in Sources */,

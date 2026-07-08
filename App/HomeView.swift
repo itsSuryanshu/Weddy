@@ -5,6 +5,7 @@ struct HomeView: View {
     /// nil = mirror the live weather; otherwise browse a specific scene.
     @State private var previewScene: PupScene?
     @State private var previewLayout = SceneLayout.makeInitial(for: .clearDay)
+    @State private var isShowingLocationPicker = false
 
     /// In-app preview wanders much faster than the Live Activity so the
     /// scene feels alive while you watch it — every few seconds the dog
@@ -34,6 +35,20 @@ struct HomeView: View {
                 .padding()
             }
             .navigationTitle("PupWeather")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        isShowingLocationPicker = true
+                    } label: {
+                        Image(systemName: "mappin.and.ellipse")
+                    }
+                }
+            }
+            .sheet(isPresented: $isShowingLocationPicker) {
+                LocationPickerView(currentSelection: manager.selectedLocation) { selection in
+                    Task { await manager.selectLocation(selection) }
+                }
+            }
             .task {
                 await manager.ensureActivityRunning()
             }

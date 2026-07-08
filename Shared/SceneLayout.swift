@@ -30,9 +30,9 @@ struct SceneLayout: Codable, Hashable {
         case .clearDay: [.trot, .sit, .sniff, .trot, .sit]
         case .warmDay: [.jump, .jump, .trot, .jump]  // frolics with the butterflies
         case .cloudy: [.sit, .trot, .sniff, .sit]
-        case .rain, .thunder: [.sit]
+        case .rain, .thunder: [.trot, .sit, .trot]
         case .snow: [.jump, .trot, .sit]
-        case .fog: [.sniff, .sit, .sniff]
+        case .fog: [.sniff, .trot, .sit, .trot]
         case .night: [.sleep]
         }
     }

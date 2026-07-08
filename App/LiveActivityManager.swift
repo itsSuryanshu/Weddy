@@ -23,10 +23,12 @@ final class LiveActivityManager {
     private(set) var isRefreshing = false
     private(set) var isActivityRunning = false
     private(set) var layout = SceneLayout.makeInitial(for: .clearDay)
+    private(set) var selectedLocation: LocationSelection
     private var isEnsuringActivity = false
     private var wanderTask: Task<Void, Never>?
 
     private init() {
+        selectedLocation = LocationSelectionStore.load()
         syncActivityState()
         Task {
             for await _ in Activity<PupActivityAttributes>.activityUpdates {
@@ -52,12 +54,22 @@ final class LiveActivityManager {
     }
 
     private var isLocationDenied: Bool {
+        guard case .gps = selectedLocation else { return false }
         switch LocationService.shared.authorizationStatus {
         case .denied, .restricted:
-            true
+            return true
         default:
-            false
+            return false
         }
+    }
+
+    // MARK: - Location selection
+
+    func selectLocation(_ selection: LocationSelection) async {
+        guard selection != selectedLocation else { return }
+        selectedLocation = selection
+        LocationSelectionStore.save(selection)
+        await ensureActivityRunning()
     }
 
     // MARK: - Lifecycle
@@ -169,17 +181,29 @@ final class LiveActivityManager {
         isRefreshing = true
         defer { isRefreshing = false }
         do {
-            let location = try await LocationService.shared.currentLocation()
-            placeName = nil
-            let weather = try await WeatherService.fetch(for: location.coordinate)
+            let coordinate: CLLocationCoordinate2D
+            var gpsLocation: CLLocation?
+            switch selectedLocation {
+            case .gps:
+                let location = try await LocationService.shared.currentLocation()
+                coordinate = location.coordinate
+                gpsLocation = location
+                placeName = nil
+            case .manual(let city):
+                coordinate = city.coordinate
+                placeName = city.displayName
+            }
+            let weather = try await WeatherService.fetch(for: coordinate)
             currentWeather = weather
             lastRefresh = .now
             errorMessage = nil
-            await reverseGeocode(location)
+            if let gpsLocation {
+                await reverseGeocode(gpsLocation)
+            }
             await pushUpdate(weather)
             return true
         } catch LocationService.LocationError.denied {
-            errorMessage = "Location access is denied. Enable it in Settings to get local weather."
+            errorMessage = "Location access is denied. Enable it in Settings to get local weather, or pick a city manually."
             return false
         } catch {
             errorMessage = "Weather refresh failed: \(error.localizedDescription)"

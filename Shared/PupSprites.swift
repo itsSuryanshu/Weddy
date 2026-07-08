@@ -71,10 +71,10 @@ enum PupSprites {
         ".kooooooooooooooook.......",
         "..kddoooooooooddok........",
         "..kokdooooooodkok.........",
-        "..kok.kooook.kok..........",
-        "..kok..kok...kok..........",
-        ".kdok..kdk...kdok.........",
-        ".kkk...kkk...kkk..........",
+        "..kdk.kok.kdk.kok.........",
+        "..kdk.kok.kdk.kok.........",
+        ".kdok.kdok.kdok.kdok......",
+        ".kkk..kkk..kkk..kkk.......",
     ])
 
     /// Side-view jump, drawn facing right — legs stretched, tail up.
@@ -89,10 +89,10 @@ enum PupSprites {
         "..koooooooooooooookbbkttk...",
         ".kooooooooooooooookkbkk.....",
         "kooookoooooooookook.........",
-        "koook.kdoooodk.koook........",
-        "kook...koook....koook.......",
-        ".kk.....kkk......kook.......",
-        "..................kk........",
+        "koook.kdok.kdok.koook.......",
+        "kook..kok..kok..koook.......",
+        ".kk....k....k...kook........",
+        ".................kk.........",
     ])
 
     /// Side-view sniffing, nose down in the grass, drawn facing right.
@@ -108,9 +108,9 @@ enum PupSprites {
         "..kooooooooooookkodook....",
         "..kddoooooooodok.koooook..",
         "..kokdooooooodkk.kboeoook.",
-        "..kok.kooook.kok.kbkoccnk.",
-        ".kdok..kdok..kdok.kk.kcnk.",
-        ".kkk...kkk...kkk.....kkk..",
+        "..kok.kok.kok.kokkbkoccnk.",
+        ".kdok.kok.kok.kdokkk.kcnk.",
+        ".kkk.kkk.kkk.kkk.....kkk..",
     ])
 
     /// Curled up asleep.
@@ -119,12 +119,12 @@ enum PupSprites {
         "....kkoooooooOkk......",
         "...koooooooooOOOk.....",
         "..koooooooooooooOk....",
-        ".kdkkooooooooooook....",
-        "kddkoooooooooooooOk...",
-        "kdkoeeoooooooooooook..",
-        "kokoooccooooddddooook.",
-        ".kkoccncoodkkkkdook...",
-        "..kkkkkkkkk....kkkk...",
+        ".kdkkoooccccooook.....",
+        "kddkoooccccoooooOk...",
+        "kdkooeeooeeoooooook..",
+        "kokooccccccccddddooook",
+        ".kkoocnnncoodkkkkdook.",
+        "..kkkkkkkkkk....kkkk..",
     ])
 
     // MARK: Scenery

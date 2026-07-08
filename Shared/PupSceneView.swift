@@ -217,7 +217,9 @@ struct SceneComposer {
         let sprite = dogSprite
         let width = Double(sprite.width) * dogScale
         let height = Double(sprite.height) * dogScale
-        let lift = layout.dogAction == .jump ? 9.0 : 0.0
+        // Keep the dog hovering at the same height in every pose/scene —
+        // matches the elevated look the jump pose already had on its own.
+        let lift = 9.0
         p.stamp(sprite, x: 0, y: 0, flipX: layout.dogFacesLeft, scale: dogScale)
 
         if layout.dogAction == .sleep {
