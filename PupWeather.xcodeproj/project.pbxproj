@@ -60,6 +60,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0115382E8CA775158A033C46 /* card-warmDay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "card-warmDay.png"; sourceTree = "<group>"; };
 		0383549FA605BA1984B62795 /* rain.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = rain.png; sourceTree = "<group>"; };
 		040762CD10A98E61A21FE45A /* PupWeatherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupWeatherApp.swift; sourceTree = "<group>"; };
 		0603FA5AE3F766DBF4487232 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -80,9 +81,11 @@
 		4ED2482957844C8EC282578C /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		500D7A6FFD718680CCACA8DB /* PupLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupLiveActivity.swift; sourceTree = "<group>"; };
 		52F635F9C17C39CD5A77F3E9 /* sprite-dogSleep.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sprite-dogSleep.png"; sourceTree = "<group>"; };
+		5D0C1527792B4CA125FAEF47 /* card-snow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "card-snow.png"; sourceTree = "<group>"; };
 		62934B26174F1E3D146C4894 /* PupSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupSceneView.swift; sourceTree = "<group>"; };
 		671ACE4C6B83FA7D1C18C129 /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
 		6F7EA3BD8549712055B6A798 /* PupActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupActivityAttributes.swift; sourceTree = "<group>"; };
+		6FE07A464CC6075FAF8E368E /* card-night.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "card-night.png"; sourceTree = "<group>"; };
 		7A16A964D377252D825DC885 /* PupScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupScene.swift; sourceTree = "<group>"; };
 		7DD189459A64696398222970 /* sprite-dogJump.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sprite-dogJump.png"; sourceTree = "<group>"; };
 		817C837D554B686FAC756BCD /* BackgroundRefresher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRefresher.swift; sourceTree = "<group>"; };
@@ -147,6 +150,9 @@
 		78605FFAF2E6AC568D72B5AD /* out */ = {
 			isa = PBXGroup;
 			children = (
+				6FE07A464CC6075FAF8E368E /* card-night.png */,
+				5D0C1527792B4CA125FAEF47 /* card-snow.png */,
+				0115382E8CA775158A033C46 /* card-warmDay.png */,
 				F785308B72B848011B4666A8 /* clearDay.png */,
 				DFED36CD2C6E7EA4F3315CF7 /* cloudy.png */,
 				BF39CD35B5FD3D6414106AB1 /* fog.png */,

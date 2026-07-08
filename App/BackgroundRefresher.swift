@@ -24,7 +24,7 @@ enum BackgroundRefresher {
     private static func handle(task: BGAppRefreshTask) {
         schedule()  // always keep the chain alive
         let work = Task { @MainActor in
-            await LiveActivityManager.shared.refresh()
+            await LiveActivityManager.shared.refreshAll()
             task.setTaskCompleted(success: true)
         }
         task.expirationHandler = {

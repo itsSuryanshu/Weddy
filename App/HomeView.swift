@@ -5,7 +5,8 @@ struct HomeView: View {
     /// nil = mirror the live weather; otherwise browse a specific scene.
     @State private var previewScene: PupScene?
     @State private var previewLayout = SceneLayout.makeInitial(for: .clearDay)
-    @State private var isShowingLocationPicker = false
+    @State private var isShowingChangePrimarySheet = false
+    @State private var isShowingAddLocationSheet = false
 
     /// In-app preview wanders much faster than the Live Activity so the
     /// scene feels alive while you watch it — every few seconds the dog
@@ -16,37 +17,88 @@ struct HomeView: View {
         previewScene ?? manager.scene
     }
 
+    private var addedLocations: [TrackedLocation] {
+        manager.trackedLocations
+            .filter { !$0.isPrimary }
+            .sorted { $0.addedAt < $1.addedAt }
+    }
+
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    scenePreview
-                    scenePicker
-                    weatherCard
+            List {
+                Section {
+                    VStack(spacing: 20) {
+                        scenePreview
+                        scenePicker
+                    }
+                }
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+
+                if let primary = manager.primaryLocation {
+                    Section {
+                        LocationCard(location: primary, manager: manager)
+                    }
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                }
+
+                if !addedLocations.isEmpty {
+                    Section("Other Locations") {
+                        ForEach(addedLocations) { location in
+                            LocationCard(location: location, manager: manager)
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                        }
+                        .onDelete { indexSet in
+                            for index in indexSet {
+                                let location = addedLocations[index]
+                                Task { await manager.removeLocation(id: location.id) }
+                            }
+                        }
+                    }
+                }
+
+                Section {
                     activityStatus
                     if let error = manager.errorMessage {
                         Text(error)
                             .font(.footnote)
                             .foregroundStyle(.red)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
+                            .multilineTextAlignment(.leading)
                     }
                 }
-                .padding()
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
+            .listStyle(.plain)
             .navigationTitle("PupWeather")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        isShowingLocationPicker = true
+                        isShowingChangePrimarySheet = true
                     } label: {
                         Image(systemName: "mappin.and.ellipse")
                     }
                 }
             }
-            .sheet(isPresented: $isShowingLocationPicker) {
-                LocationPickerView(currentSelection: manager.selectedLocation) { selection in
-                    Task { await manager.selectLocation(selection) }
+            .overlay(alignment: .bottomTrailing) {
+                addLocationButton
+            }
+            .sheet(isPresented: $isShowingChangePrimarySheet) {
+                LocationPickerView(
+                    mode: .replacePrimary,
+                    currentSelection: manager.primaryLocation?.selection ?? .gps
+                ) { selection in
+                    Task { await manager.setPrimaryLocation(selection) }
+                }
+            }
+            .sheet(isPresented: $isShowingAddLocationSheet) {
+                LocationPickerView(
+                    mode: .add,
+                    alreadyTrackedIDs: Set(manager.trackedLocations.map(\.id))
+                ) { selection in
+                    Task { await manager.addLocation(selection) }
                 }
             }
             .task {
@@ -100,37 +152,6 @@ struct HomeView: View {
         .buttonStyle(.plain)
     }
 
-    private var weatherCard: some View {
-        HStack(spacing: 14) {
-            Image(systemName: manager.scene.symbolName)
-                .font(.system(size: 34))
-                .symbolRenderingMode(.multicolor)
-            VStack(alignment: .leading, spacing: 2) {
-                if let weather = manager.currentWeather {
-                    Text("\(Int(weather.temperatureC.rounded()))°C · \(weather.scene.label)")
-                        .font(.title3.bold())
-                } else {
-                    Text(manager.isRefreshing ? "Fetching weather…" : "No weather yet")
-                        .font(.title3.bold())
-                }
-                if let place = manager.placeName {
-                    Text(place).font(.subheadline).foregroundStyle(.secondary)
-                }
-                if let refreshed = manager.lastRefresh {
-                    Text("Updated \(refreshed.formatted(date: .omitted, time: .shortened))")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-            Spacer()
-            if manager.isRefreshing {
-                ProgressView()
-            }
-        }
-        .padding()
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
-    }
-
     private var activityStatus: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Live Activity status").font(.headline)
@@ -154,6 +175,88 @@ struct HomeView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var addLocationButton: some View {
+        Button {
+            isShowingAddLocationSheet = true
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 56, height: 56)
+                .background(Circle().fill(Color.accentColor))
+                .shadow(radius: 4, y: 2)
+        }
+        .padding(.trailing, 20)
+        .padding(.bottom, 20)
+        .accessibilityLabel("Add location")
+        .disabled(manager.trackedLocations.count >= LiveActivityManager.maxTrackedLocations)
+        .opacity(manager.trackedLocations.count >= LiveActivityManager.maxTrackedLocations ? 0.4 : 1)
+    }
+}
+
+/// One tracked location's weather + Live Activity status. Reads its state
+/// from the manager's per-location dictionaries rather than singular
+/// properties, since multiple of these can be on screen at once.
+private struct LocationCard: View {
+    let location: TrackedLocation
+    let manager: LiveActivityManager
+
+    private var id: String { location.id }
+    private var weather: CurrentWeather? { manager.weatherByLocation[id] }
+    private var isRefreshing: Bool { manager.refreshingIDs.contains(id) }
+    private var isRunning: Bool { manager.isActivityRunning(for: id) }
+
+    private var title: String {
+        switch location.selection {
+        case .gps: return manager.placeNameByLocation[id] ?? "Current Location"
+        case .manual(let city): return city.displayName
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 14) {
+                Image(systemName: (weather?.scene ?? .clearDay).symbolName)
+                    .font(.system(size: 34))
+                    .symbolRenderingMode(.multicolor)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.secondary)
+                    if let weather {
+                        Text("\(Int(weather.temperatureC.rounded()))°C · \(weather.scene.label)")
+                            .font(.title3.bold())
+                    } else {
+                        Text(isRefreshing ? "Fetching weather…" : "No weather yet")
+                            .font(.title3.bold())
+                    }
+                    if let refreshed = manager.lastRefreshByLocation[id] {
+                        Text("Updated \(refreshed.formatted(date: .omitted, time: .shortened))")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                Spacer()
+                if isRefreshing {
+                    ProgressView()
+                } else if !isRunning {
+                    Button("Resume") {
+                        Task { await manager.ensureActivityRunning(for: location) }
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+            }
+            if let errorMessage = manager.errorByLocation[id] {
+                Text(errorMessage)
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+            }
+        }
         .padding()
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
     }

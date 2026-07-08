@@ -6,20 +6,42 @@ enum LocationSelection: Codable, Equatable {
     case manual(GeocodedCity)
 }
 
-/// Persists the chosen location across launches. UserDefaults + Codable,
-/// the simplest correct approach given no persistence layer exists yet.
-enum LocationSelectionStore {
-    private static let key = "com.pupweather.selectedLocation"
+extension LocationSelection {
+    /// Stable identity independent of transient app state, used to key
+    /// per-location Live Activities and dictionaries.
+    var stableID: String {
+        switch self {
+        case .gps: return "gps"
+        case .manual(let city): return "city-\(city.id)"
+        }
+    }
+}
 
-    static func load() -> LocationSelection {
+/// One location the user is tracking a Live Activity for. `isPrimary` marks
+/// the original/current location, which is always pinned first and can't be
+/// removed.
+struct TrackedLocation: Codable, Equatable, Identifiable {
+    var selection: LocationSelection
+    var isPrimary: Bool
+    var addedAt: Date = .now
+
+    var id: String { selection.stableID }
+}
+
+/// Persists the set of tracked locations across launches. UserDefaults +
+/// Codable, the simplest correct approach given no persistence layer exists yet.
+enum TrackedLocationStore {
+    private static let key = "com.pupweather.trackedLocations.v2"
+
+    static func load() -> [TrackedLocation] {
         guard let data = UserDefaults.standard.data(forKey: key),
-              let decoded = try? JSONDecoder().decode(LocationSelection.self, from: data)
-        else { return .gps }
+              let decoded = try? JSONDecoder().decode([TrackedLocation].self, from: data)
+        else { return [] }
         return decoded
     }
 
-    static func save(_ selection: LocationSelection) {
-        guard let data = try? JSONEncoder().encode(selection) else { return }
+    static func save(_ locations: [TrackedLocation]) {
+        guard let data = try? JSONEncoder().encode(locations) else { return }
         UserDefaults.standard.set(data, forKey: key)
     }
 }

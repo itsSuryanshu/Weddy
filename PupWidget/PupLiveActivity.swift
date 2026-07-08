@@ -37,6 +37,14 @@ private struct LockScreenView: View {
                 WeatherBadge(scene: context.state.scene,
                              temperatureC: context.state.temperatureC)
             }
+            .overlay(alignment: .topLeading) {
+                Text(context.attributes.locationName)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(context.state.scene.ink)
+                    .lineLimit(1)
+                    .padding(.leading, 10)
+                    .padding(.top, 6)
+            }
     }
 }
 

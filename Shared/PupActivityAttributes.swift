@@ -12,4 +12,10 @@ struct PupActivityAttributes: ActivityAttributes {
     }
 
     var startedAt: Date
+    /// Matches `TrackedLocation.id` / `LocationSelection.stableID`. Fixed at
+    /// creation — attributes can't be edited after `Activity.request`, so
+    /// changing what a location points to means ending this activity and
+    /// starting a new one, never mutating this in place.
+    var locationID: String
+    var locationName: String
 }

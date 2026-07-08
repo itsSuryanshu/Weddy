@@ -11,24 +11,38 @@ private let log = Logger(subsystem: "com.pupweather.app", category: "LiveActivit
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
 
+    /// 1 primary + 3 added, keeps background refresh fast and the Lock
+    /// Screen stack scannable.
+    static let maxTrackedLocations = 4
+
     /// How often the dog wanders to a new spot while the app is frontmost.
     /// Background moves ride along with BGAppRefresh weather updates.
     private static let wanderInterval: Duration = .seconds(120)
 
-    private(set) var currentWeather: CurrentWeather?
-    private(set) var placeName: String?
-    private(set) var lastRefresh: Date?
+    private(set) var trackedLocations: [TrackedLocation] = []
+    private(set) var weatherByLocation: [String: CurrentWeather] = [:]
+    private(set) var placeNameByLocation: [String: String] = [:]
+    private(set) var lastRefreshByLocation: [String: Date] = [:]
+    private(set) var errorByLocation: [String: String] = [:]
+    private(set) var layoutByLocation: [String: SceneLayout] = [:]
+    private(set) var refreshingIDs: Set<String> = []
+    /// Location IDs with a live `Activity` right now. Mirrors ActivityKit's
+    /// own state into an `@Observable` property so SwiftUI re-renders when an
+    /// activity starts/ends (including externally, e.g. the user dismissing
+    /// it from the Lock Screen), since `Activity<...>.activities` itself
+    /// isn't observable.
+    private(set) var runningLocationIDs: Set<String> = []
     private(set) var errorMessage: String?
     private(set) var statusMessage: String?
-    private(set) var isRefreshing = false
-    private(set) var isActivityRunning = false
-    private(set) var layout = SceneLayout.makeInitial(for: .clearDay)
-    private(set) var selectedLocation: LocationSelection
-    private var isEnsuringActivity = false
-    private var wanderTask: Task<Void, Never>?
+
+    private var wanderTasks: [String: Task<Void, Never>] = [:]
+    private var ensuringIDs: Set<String> = []
 
     private init() {
-        selectedLocation = LocationSelectionStore.load()
+        trackedLocations = TrackedLocationStore.load()
+        if trackedLocations.isEmpty {
+            trackedLocations = [TrackedLocation(selection: .gps, isPrimary: true)]
+        }
         syncActivityState()
         Task {
             for await _ in Activity<PupActivityAttributes>.activityUpdates {
@@ -37,12 +51,17 @@ final class LiveActivityManager {
         }
     }
 
-    private var activity: Activity<PupActivityAttributes>? {
-        Activity<PupActivityAttributes>.activities.first
+    private func activity(for locationID: String) -> Activity<PupActivityAttributes>? {
+        Activity<PupActivityAttributes>.activities.first { $0.attributes.locationID == locationID }
+    }
+
+    var primaryLocation: TrackedLocation? {
+        trackedLocations.first { $0.isPrimary }
     }
 
     var scene: PupScene {
-        currentWeather?.scene ?? .clearDay
+        guard let id = primaryLocation?.id else { return .clearDay }
+        return weatherByLocation[id]?.scene ?? .clearDay
     }
 
     var activitiesEnabled: Bool {
@@ -50,11 +69,19 @@ final class LiveActivityManager {
     }
 
     var activityCount: Int {
-        Activity<PupActivityAttributes>.activities.count
+        runningLocationIDs.count
     }
 
-    private var isLocationDenied: Bool {
-        guard case .gps = selectedLocation else { return false }
+    var isActivityRunning: Bool {
+        !runningLocationIDs.isEmpty
+    }
+
+    func isActivityRunning(for id: String) -> Bool {
+        runningLocationIDs.contains(id)
+    }
+
+    private func isLocationDenied(_ selection: LocationSelection) -> Bool {
+        guard case .gps = selection else { return false }
         switch LocationService.shared.authorizationStatus {
         case .denied, .restricted:
             return true
@@ -63,21 +90,86 @@ final class LiveActivityManager {
         }
     }
 
-    // MARK: - Location selection
+    private func displayName(for location: TrackedLocation) -> String {
+        switch location.selection {
+        case .gps: return "Current Location"
+        case .manual(let city): return city.displayName
+        }
+    }
 
-    func selectLocation(_ selection: LocationSelection) async {
-        guard selection != selectedLocation else { return }
-        selectedLocation = selection
-        LocationSelectionStore.save(selection)
-        await ensureActivityRunning()
+    // MARK: - Tracked locations
+
+    @discardableResult
+    func addLocation(_ selection: LocationSelection) async -> Bool {
+        let id = selection.stableID
+        guard !trackedLocations.contains(where: { $0.id == id }) else {
+            statusMessage = "That location is already being tracked."
+            return false
+        }
+        guard trackedLocations.count < Self.maxTrackedLocations else {
+            statusMessage = "You can track up to \(Self.maxTrackedLocations) locations at once."
+            return false
+        }
+        let location = TrackedLocation(selection: selection, isPrimary: false)
+        trackedLocations.append(location)
+        TrackedLocationStore.save(trackedLocations)
+        await ensureActivityRunning(for: location)
+        return true
+    }
+
+    func removeLocation(id: String) async {
+        guard let location = trackedLocations.first(where: { $0.id == id }), !location.isPrimary else { return }
+        wanderTasks[id]?.cancel()
+        wanderTasks[id] = nil
+        if let activity = activity(for: id) {
+            await activity.end(nil, dismissalPolicy: .immediate)
+        }
+        trackedLocations.removeAll { $0.id == id }
+        clearState(for: id)
+        TrackedLocationStore.save(trackedLocations)
+        syncActivityState()
+    }
+
+    func setPrimaryLocation(_ selection: LocationSelection) async {
+        guard var primary = primaryLocation, primary.selection != selection else { return }
+        let oldID = primary.id
+        wanderTasks[oldID]?.cancel()
+        wanderTasks[oldID] = nil
+        if let oldActivity = activity(for: oldID) {
+            await oldActivity.end(nil, dismissalPolicy: .immediate)
+        }
+        clearState(for: oldID)
+
+        primary.selection = selection
+        primary.addedAt = .now
+        if let index = trackedLocations.firstIndex(where: { $0.isPrimary }) {
+            trackedLocations[index] = primary
+        }
+        TrackedLocationStore.save(trackedLocations)
+        await ensureActivityRunning(for: primary)
+    }
+
+    private func clearState(for id: String) {
+        weatherByLocation[id] = nil
+        placeNameByLocation[id] = nil
+        lastRefreshByLocation[id] = nil
+        errorByLocation[id] = nil
+        layoutByLocation[id] = nil
     }
 
     // MARK: - Lifecycle
 
     func ensureActivityRunning() async {
-        guard !isEnsuringActivity else { return }
-        isEnsuringActivity = true
-        defer { isEnsuringActivity = false }
+        for location in trackedLocations {
+            await ensureActivityRunning(for: location)
+        }
+    }
+
+    func ensureActivityRunning(for location: TrackedLocation) async {
+        let id = location.id
+        guard !ensuringIDs.contains(id) else { return }
+        ensuringIDs.insert(id)
+        defer { ensuringIDs.remove(id) }
 
         guard activitiesEnabled else {
             log.error("Live Activities are not enabled for this app")
@@ -86,33 +178,38 @@ final class LiveActivityManager {
             return
         }
 
-        let refreshed = await refresh()
-
-        if activity != nil {
-            isActivityRunning = true
-            if let weather = currentWeather {
-                await pushUpdate(weather)
+        if activity(for: id) != nil {
+            let refreshed = await refresh(for: id)
+            if refreshed, let weather = weatherByLocation[id] {
+                await pushUpdate(weather, for: id)
             }
             statusMessage = "Lock Screen pup is active."
-            startWanderLoop()
+            startWanderLoop(for: id)
             return
         }
 
-        if !refreshed && isLocationDenied {
+        let refreshed = await refresh(for: id)
+        if !refreshed && isLocationDenied(location.selection) {
             statusMessage = nil
             return
         }
 
-        await requestActivity()
+        await requestActivity(for: location)
     }
 
-    private func requestActivity() async {
-        let weather = currentWeather
-        let attributes = PupActivityAttributes(startedAt: .now)
-        layout = SceneLayout.makeInitial(for: weather?.scene ?? .clearDay)
+    private func requestActivity(for location: TrackedLocation) async {
+        let id = location.id
+        let weather = weatherByLocation[id]
+        let attributes = PupActivityAttributes(
+            startedAt: .now,
+            locationID: id,
+            locationName: displayName(for: location)
+        )
+        layoutByLocation[id] = SceneLayout.makeInitial(for: weather?.scene ?? .clearDay)
         let state = contentState(
             scene: weather?.scene ?? .clearDay,
-            temperatureC: weather?.temperatureC ?? 20
+            temperatureC: weather?.temperatureC ?? 20,
+            id: id
         )
 
         do {
@@ -120,54 +217,61 @@ final class LiveActivityManager {
                 attributes: attributes,
                 content: .init(state: state, staleDate: Date(timeIntervalSinceNow: 3 * 3600))
             )
-            log.info("Live Activity started: \(activity.id), scene=\(state.scene.rawValue)")
-            errorMessage = nil
+            log.info("Live Activity started: \(activity.id), location=\(id)")
+            errorByLocation[id] = nil
             statusMessage = weather == nil
                 ? "Lock Screen pup restored with a default scene."
                 : "Lock Screen pup is active."
-            isActivityRunning = true
-            startWanderLoop()
+            startWanderLoop(for: id)
+            syncActivityState()
             BackgroundRefresher.schedule()
         } catch {
             log.error("Activity.request failed: \(error)")
-            errorMessage = "Could not restore the Lock Screen pup: \(error.localizedDescription)"
+            errorByLocation[id] = "Could not start the Lock Screen pup: \(error.localizedDescription)"
             statusMessage = nil
             syncActivityState()
         }
     }
 
     func stopActivity() async {
-        wanderTask?.cancel()
-        wanderTask = nil
+        for task in wanderTasks.values {
+            task.cancel()
+        }
+        wanderTasks.removeAll()
         for activity in Activity<PupActivityAttributes>.activities {
             await activity.end(nil, dismissalPolicy: .immediate)
         }
+        weatherByLocation.removeAll()
+        placeNameByLocation.removeAll()
+        lastRefreshByLocation.removeAll()
+        errorByLocation.removeAll()
+        layoutByLocation.removeAll()
         syncActivityState()
         statusMessage = "Live Activity stopped."
     }
 
     // MARK: - Dog wandering
 
-    /// While the app is frontmost, send the dog somewhere new every couple of
-    /// minutes. Each push animates the dog to a fresh spot / pose; on warm
-    /// sunny scenes that's mostly jumping around with the butterflies.
-    private func startWanderLoop() {
-        guard wanderTask == nil else { return }
-        wanderTask = Task { [weak self] in
+    /// While the app is frontmost, send each location's dog somewhere new
+    /// every couple of minutes. Independent per-location tasks so cards
+    /// animate on their own jittered cadence instead of in lockstep.
+    private func startWanderLoop(for id: String) {
+        guard wanderTasks[id] == nil else { return }
+        wanderTasks[id] = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: Self.wanderInterval)
                 guard let self, !Task.isCancelled else { return }
-                await self.wander()
+                await self.wander(for: id)
             }
         }
     }
 
-    private func wander() async {
-        guard let activity else { return }
-        let scene = currentWeather?.scene ?? .clearDay
-        layout = SceneLayout.wander(from: layout, scene: scene)
-        let state = contentState(scene: scene,
-                                 temperatureC: currentWeather?.temperatureC ?? 20)
+    private func wander(for id: String) async {
+        guard let activity = activity(for: id) else { return }
+        let scene = weatherByLocation[id]?.scene ?? .clearDay
+        let layout = SceneLayout.wander(from: layoutByLocation[id] ?? .makeInitial(for: scene), scene: scene)
+        layoutByLocation[id] = layout
+        let state = contentState(scene: scene, temperatureC: weatherByLocation[id]?.temperatureC ?? 20, id: id)
         await activity.update(
             .init(state: state, staleDate: Date(timeIntervalSinceNow: 3 * 3600))
         )
@@ -176,47 +280,60 @@ final class LiveActivityManager {
     // MARK: - Refresh (called on launch/foreground and from background task)
 
     @discardableResult
-    func refresh() async -> Bool {
-        guard !isRefreshing else { return false }
-        isRefreshing = true
-        defer { isRefreshing = false }
+    func refresh(for id: String) async -> Bool {
+        guard let location = trackedLocations.first(where: { $0.id == id }) else { return false }
+        guard !refreshingIDs.contains(id) else { return false }
+        refreshingIDs.insert(id)
+        defer { refreshingIDs.remove(id) }
         do {
             let coordinate: CLLocationCoordinate2D
             var gpsLocation: CLLocation?
-            switch selectedLocation {
+            switch location.selection {
             case .gps:
-                let location = try await LocationService.shared.currentLocation()
-                coordinate = location.coordinate
-                gpsLocation = location
-                placeName = nil
+                let loc = try await LocationService.shared.currentLocation()
+                coordinate = loc.coordinate
+                gpsLocation = loc
+                placeNameByLocation[id] = nil
             case .manual(let city):
                 coordinate = city.coordinate
-                placeName = city.displayName
+                placeNameByLocation[id] = city.displayName
             }
             let weather = try await WeatherService.fetch(for: coordinate)
-            currentWeather = weather
-            lastRefresh = .now
-            errorMessage = nil
+            weatherByLocation[id] = weather
+            lastRefreshByLocation[id] = .now
+            errorByLocation[id] = nil
             if let gpsLocation {
-                await reverseGeocode(gpsLocation)
+                await reverseGeocode(gpsLocation, for: id)
             }
-            await pushUpdate(weather)
+            await pushUpdate(weather, for: id)
             return true
         } catch LocationService.LocationError.denied {
-            errorMessage = "Location access is denied. Enable it in Settings to get local weather, or pick a city manually."
+            errorByLocation[id] = "Location access is denied. Enable it in Settings to get local weather, or pick a city manually."
             return false
         } catch {
-            errorMessage = "Weather refresh failed: \(error.localizedDescription)"
+            errorByLocation[id] = "Weather refresh failed: \(error.localizedDescription)"
             return false
         }
     }
 
-    private func pushUpdate(_ weather: CurrentWeather) async {
-        guard let activity else { return }
+    /// Fans out refreshes for every tracked location concurrently so N
+    /// network round trips (plus any reverse geocodes) fit inside the
+    /// ~20s BGAppRefreshTask execution window.
+    func refreshAll() async {
+        await withTaskGroup(of: Void.self) { group in
+            for location in trackedLocations {
+                group.addTask { await self.refresh(for: location.id) }
+            }
+        }
+    }
+
+    private func pushUpdate(_ weather: CurrentWeather, for id: String) async {
+        guard let activity = activity(for: id) else { return }
         // Every update doubles as a wander tick so the dog also moves on
         // background refreshes, not just on the foreground timer.
-        layout = SceneLayout.wander(from: layout, scene: weather.scene)
-        let state = contentState(scene: weather.scene, temperatureC: weather.temperatureC)
+        let layout = SceneLayout.wander(from: layoutByLocation[id] ?? .makeInitial(for: weather.scene), scene: weather.scene)
+        layoutByLocation[id] = layout
+        let state = contentState(scene: weather.scene, temperatureC: weather.temperatureC, id: id)
         await activity.update(
             .init(state: state, staleDate: Date(timeIntervalSinceNow: 3 * 3600))
         )
@@ -224,26 +341,37 @@ final class LiveActivityManager {
 
     private func contentState(
         scene: PupScene,
-        temperatureC: Double
+        temperatureC: Double,
+        id: String
     ) -> PupActivityAttributes.ContentState {
         .init(
             scene: scene,
             temperatureC: temperatureC,
             updatedAt: .now,
-            layout: layout
+            layout: layoutByLocation[id] ?? .makeInitial(for: scene)
         )
     }
 
-    private func reverseGeocode(_ location: CLLocation) async {
+    private func reverseGeocode(_ location: CLLocation, for id: String) async {
         let geocoder = CLGeocoder()
         if let placemark = try? await geocoder.reverseGeocodeLocation(location).first {
-            placeName = placemark.locality ?? placemark.subAdministrativeArea
+            placeNameByLocation[id] = placemark.locality ?? placemark.subAdministrativeArea
         } else {
-            placeName = nil
+            placeNameByLocation[id] = nil
         }
     }
 
+    /// Refreshes `runningLocationIDs` from ActivityKit's live state. For the
+    /// primary location, a missing activity is auto-restarted (matches the
+    /// app's existing zero-config behavior on foreground). Secondary
+    /// locations are left as "not running" instead — silently resurrecting
+    /// something the user dismissed from the Lock Screen would be
+    /// surprising; their card shows a manual "Resume" affordance instead.
     private func syncActivityState() {
-        isActivityRunning = !Activity<PupActivityAttributes>.activities.isEmpty
+        let ids = Set(Activity<PupActivityAttributes>.activities.map(\.attributes.locationID))
+        runningLocationIDs = ids
+        if let primary = primaryLocation, !ids.contains(primary.id) {
+            Task { await self.ensureActivityRunning(for: primary) }
+        }
     }
 }
