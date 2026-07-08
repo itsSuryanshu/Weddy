@@ -8,9 +8,13 @@ enum PupScene: String, Codable, CaseIterable, Hashable {
     case warmDay
     case cloudy
     case rain
+    case rainNight
     case thunder
+    case thunderNight
     case snow
+    case snowNight
     case fog
+    case fogNight
     case night
 
     var label: String {
@@ -19,9 +23,13 @@ enum PupScene: String, Codable, CaseIterable, Hashable {
         case .warmDay: "Sunny & Butterflies"
         case .cloudy: "Cloudy"
         case .rain: "Rain"
+        case .rainNight: "Night Rain"
         case .thunder: "Thunderstorm"
+        case .thunderNight: "Night Thunderstorm"
         case .snow: "Snow"
+        case .snowNight: "Night Snow"
         case .fog: "Fog"
+        case .fogNight: "Night Fog"
         case .night: "Clear Night"
         }
     }
@@ -32,9 +40,13 @@ enum PupScene: String, Codable, CaseIterable, Hashable {
         case .warmDay: "sun.max.fill"
         case .cloudy: "cloud.fill"
         case .rain: "cloud.rain.fill"
+        case .rainNight: "cloud.moon.rain.fill"
         case .thunder: "cloud.bolt.rain.fill"
+        case .thunderNight: "cloud.moon.bolt.fill"
         case .snow: "cloud.snow.fill"
+        case .snowNight: "cloud.snow.fill"
         case .fog: "cloud.fog.fill"
+        case .fogNight: "cloud.fog.fill"
         case .night: "moon.stars.fill"
         }
     }
@@ -44,9 +56,13 @@ enum PupScene: String, Codable, CaseIterable, Hashable {
         case .clearDay, .warmDay: 0x1280F7
         case .cloudy: 0x687D96
         case .rain: 0x293B4F
+        case .rainNight: 0x121A30
         case .thunder: 0x0F1224
+        case .thunderNight: 0x0A0C1C
         case .snow: 0x75A6D6
+        case .snowNight: 0x142440
         case .fog: 0x8FA3AD
+        case .fogNight: 0x1C2732
         case .night: 0x080F36
         }
     }
@@ -56,9 +72,13 @@ enum PupScene: String, Codable, CaseIterable, Hashable {
         case .clearDay, .warmDay: 0x85CCFF
         case .cloudy: 0xCFD9E0
         case .rain: 0x8296AB
+        case .rainNight: 0x3A4D6B
         case .thunder: 0x4F546B
+        case .thunderNight: 0x363A54
         case .snow: 0xEBF7FF
+        case .snowNight: 0x395480
         case .fog: 0xE3EBED
+        case .fogNight: 0x3D4854
         case .night: 0x38528A
         }
     }
@@ -92,9 +112,15 @@ enum PupScene: String, Codable, CaseIterable, Hashable {
             base = .cloudy
         }
         if !isDay {
-            // Precipitation still reads clearly at night; calm scenes become night.
+            // Calm scenes collapse into the plain clear-night scene, but
+            // precipitation gets its own night variant so it still reads as
+            // both "dark out" (moon/stars, dim palette) and "raining" (etc).
             switch base {
-            case .clearDay, .cloudy, .fog: return .night
+            case .clearDay, .cloudy: return .night
+            case .fog: return .fogNight
+            case .rain: return .rainNight
+            case .snow: return .snowNight
+            case .thunder: return .thunderNight
             default: return base
             }
         }

@@ -382,16 +382,41 @@ private struct SceneStyle {
                        rainA: 0x9DB8D9, rainB: 0x7A97BD,
                        cloudCount: 3, stormClouds: true, darkTrees: true,
                        rain: true, lightning: true)
+        case .rainNight:
+            SceneStyle(farHill: darken(0x2E7A44, 0.72), hill: darken(0x255F36, 0.72), hillEdge: darken(0x1B4A29, 0.72),
+                       field: darken(0x3C9145, 0.72), fieldLight: darken(0x4EA455, 0.72),
+                       front: darken(0x1E6B33, 0.72), frontBlade: darken(0x2F8442, 0.72), shadow: darken(0x1E6B33, 0.72),
+                       showsMoon: true, cloudCount: 3, stormClouds: true, darkTrees: true, rain: true)
+        case .thunderNight:
+            SceneStyle(farHill: darken(0x235B37, 0.78), hill: darken(0x1A4A2C, 0.78), hillEdge: darken(0x123B21, 0.78),
+                       field: darken(0x2C7038, 0.78), fieldLight: darken(0x357E42, 0.78),
+                       front: darken(0x143F22, 0.78), frontBlade: darken(0x1F5A31, 0.78), shadow: darken(0x143F22, 0.78),
+                       rainA: darken(0x9DB8D9, 0.8), rainB: darken(0x7A97BD, 0.8),
+                       showsMoon: true, cloudCount: 3, stormClouds: true, darkTrees: true,
+                       rain: true, lightning: true)
         case .snow:
             SceneStyle(farHill: 0xCFE6F7, hill: 0xBFDCF2, hillEdge: 0x9CC4E4,
                        field: 0xF2FAFF, fieldLight: 0xFFFFFF,
                        front: 0xD6EBFA, frontBlade: 0xEAF6FF, shadow: 0xBFDCF2,
                        cloudCount: 3, snow: true)
+        case .snowNight:
+            // Hand-tuned rather than `darken()`: uniformly scaling the
+            // near-white day-snow palette desaturates it to flat grey. A
+            // moonlit blue tint keeps it reading as snow, not pavement.
+            SceneStyle(farHill: 0x3E5C78, hill: 0x2F4A64, hillEdge: 0x22384F,
+                       field: 0x4A6C8C, fieldLight: 0x6B90B4,
+                       front: 0x35516C, frontBlade: 0x496F90, shadow: 0x22384F,
+                       showsMoon: true, cloudCount: 3, darkTrees: true, snow: true)
         case .fog:
             SceneStyle(farHill: 0x7FA98B, hill: 0x6A9678, hillEdge: 0x557F63,
                        field: 0x86B292, fieldLight: 0x97C2A2,
                        front: 0x5E8A6C, frontBlade: 0x74A181, shadow: 0x5E8A6C,
                        fogBands: true)
+        case .fogNight:
+            SceneStyle(farHill: darken(0x7FA98B, 0.5), hill: darken(0x6A9678, 0.5), hillEdge: darken(0x557F63, 0.5),
+                       field: darken(0x86B292, 0.5), fieldLight: darken(0x97C2A2, 0.5),
+                       front: darken(0x5E8A6C, 0.5), frontBlade: darken(0x74A181, 0.5), shadow: darken(0x5E8A6C, 0.5),
+                       showsMoon: true, darkTrees: true, fogBands: true)
         case .night:
             SceneStyle(farHill: 0x1C5B34, hill: 0x144A28, hillEdge: 0x0E3A1F,
                        field: 0x1F6B38, fieldLight: 0x2A7C44,
@@ -399,6 +424,17 @@ private struct SceneStyle {
                        showsMoon: true, showsStars: true, darkTrees: true)
         }
     }
+}
+
+/// Dims a day palette color for its night counterpart, keeping the same hue
+/// so night scenes read as "the same place after dark" rather than a
+/// different color scheme.
+private func darken(_ hex: UInt32, _ factor: Double) -> UInt32 {
+    func scale(_ shift: UInt32) -> UInt32 {
+        let c = Double((hex >> shift) & 0xFF)
+        return UInt32((c * factor).rounded()) << shift
+    }
+    return scale(16) | scale(8) | scale(0)
 }
 
 private func lerpHex(_ a: UInt32, _ b: UInt32, _ t: Double) -> UInt32 {
