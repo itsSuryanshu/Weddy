@@ -39,6 +39,17 @@ struct AsciiSceneComposer {
     var fontSize: CGFloat { cellW / 0.6 }
 
     func rowStrings() -> [AttributedString] {
+        paintedBuffer().rowStrings()
+    }
+
+    /// The scene's colored glyph runs per character row, for rasterizing.
+    func colorRuns() -> [[AsciiPainter.Run]] {
+        paintedBuffer().colorRuns()
+    }
+
+    /// Paints the whole scene into a character buffer; the renderer turns it
+    /// into either attributed rows (macOS render tool) or a bitmap (iOS).
+    fileprivate func paintedBuffer() -> AsciiPainter {
         var p = AsciiPainter(cols: cols, pxRows: SceneGeometry.rows)
         var rng = PixelRandom(seed: layout.worldSeed)
 
@@ -62,7 +73,7 @@ struct AsciiSceneComposer {
         }
         if style.fogBands { paintFog(&p, rng: &fg) }
 
-        return p.rowStrings()
+        return p
     }
 
     // MARK: Background
@@ -286,15 +297,20 @@ struct AsciiSceneComposer {
     }
 }
 
-/// The ASCII counterpart of the pixel `ZStack` in `PupSceneView`: ~30 rows
-/// of run-colored monospaced text on a terminal-dark backdrop. Each row is a
-/// single `Text`, so the whole scene stays well inside the Live Activity
-/// view budget.
+/// The ASCII counterpart of the pixel `ZStack` in `PupSceneView`. On iOS the
+/// scene is rasterized in-process into one exactly-sized bitmap: the Live
+/// Activity renderer archives views to draw them out-of-process, and ~30
+/// attributed `Text`s carrying 1000+ per-glyph color runs blow that budget —
+/// the lock screen silently refuses to render and shows a stuck placeholder.
+/// One `Image` always fits. The macOS render tool keeps the `Text` path
+/// (no UIKit there, and PNG capture already goes through `ImageRenderer`).
 struct AsciiSceneRenderer: View {
     let scene: PupScene
     let layout: SceneLayout
     var minHeight: CGFloat = 120
     var reservedTrailingWidth: CGFloat = 0
+
+    @Environment(\.displayScale) private var displayScale
 
     /// Terminal-dark backdrop that makes the colored glyphs pop.
     static let backdrop = Color(px: 0x10141A)
@@ -306,19 +322,62 @@ struct AsciiSceneRenderer: View {
                                               width: max(proxy.size.width, minHeight),
                                               height: minHeight,
                                               reservedTrailingWidth: reservedTrailingWidth)
-            let rows = composer.rowStrings()
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(rows.indices, id: \.self) { i in
-                    Text(rows[i])
-                        .font(.system(size: composer.fontSize, weight: .bold, design: .monospaced))
-                        .lineLimit(1)
-                        .fixedSize(horizontal: true, vertical: false)
-                        .frame(height: composer.cellH, alignment: .leading)
+            content(for: composer, width: proxy.size.width)
+                .frame(width: proxy.size.width, height: minHeight, alignment: .topLeading)
+                .background(Self.backdrop)
+                .clipped()
+        }
+    }
+
+    @ViewBuilder
+    private func content(for composer: AsciiSceneComposer, width: CGFloat) -> some View {
+        #if canImport(UIKit)
+        Image(uiImage: composer.bitmap(width: width,
+                                       height: minHeight,
+                                       displayScale: displayScale))
+        #else
+        let rows = composer.rowStrings()
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(rows.indices, id: \.self) { i in
+                Text(rows[i])
+                    .font(.system(size: composer.fontSize, weight: .bold, design: .monospaced))
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .frame(height: composer.cellH, alignment: .leading)
+            }
+        }
+        #endif
+    }
+}
+
+#if canImport(UIKit)
+extension AsciiSceneComposer {
+    /// Draws every glyph run into an opaque image at the view's exact point
+    /// size. Runs are positioned at `col * cellW` rather than relying on the
+    /// font's advance, so the grid can't drift even if SF Mono's advance
+    /// isn't exactly 0.6 em.
+    func bitmap(width: CGFloat, height: CGFloat, displayScale: CGFloat) -> UIImage {
+        let size = CGSize(width: max(width, 1), height: max(height, 1))
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = max(displayScale, 1)
+        format.opaque = true
+        let font = UIFont.monospacedSystemFont(ofSize: fontSize, weight: .bold)
+        let rows = colorRuns()
+        return UIGraphicsImageRenderer(size: size, format: format).image { ctx in
+            UIColor(AsciiSceneRenderer.backdrop).setFill()
+            ctx.fill(CGRect(origin: .zero, size: size))
+            for (row, runs) in rows.enumerated() {
+                // Vertically center the line in its cell, like the Text
+                // path's fixed-height frame did.
+                let y = CGFloat(row) * cellH + (cellH - font.lineHeight) / 2
+                for run in runs {
+                    NSAttributedString(string: run.text, attributes: [
+                        .font: font,
+                        .foregroundColor: UIColor(run.color),
+                    ]).draw(at: CGPoint(x: CGFloat(run.col) * cellW, y: y))
                 }
             }
-            .frame(width: proxy.size.width, height: minHeight, alignment: .topLeading)
-            .background(Self.backdrop)
-            .clipped()
         }
     }
 }
+#endif

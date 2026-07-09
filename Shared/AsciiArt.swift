@@ -104,41 +104,63 @@ struct AsciiPainter {
         }
     }
 
+    /// A horizontal run of same-colored glyphs within one character row,
+    /// anchored at its starting column. Gaps between runs are empty cells.
+    struct Run {
+        var col: Int
+        var text: String
+        var color: Color
+    }
+
+    /// Per character row, the colored glyph runs (painted cells only).
+    func colorRuns() -> [[Run]] {
+        var result: [[Run]] = []
+        result.reserveCapacity(rows)
+        for row in 0..<rows {
+            var runs: [Run] = []
+            var runText = ""
+            var runColor: Color?
+            var runStart = 0
+            func flush() {
+                if let color = runColor, !runText.isEmpty {
+                    runs.append(Run(col: runStart, text: runText, color: color))
+                }
+                runText = ""
+            }
+            for col in 0..<cols {
+                let cell = buffer[row * cols + col]
+                if cell?.color != runColor {
+                    flush()
+                    runColor = cell?.color
+                    runStart = col
+                }
+                if let cell {
+                    runText.append(cell.glyph)
+                }
+            }
+            flush()
+            result.append(runs)
+        }
+        return result
+    }
+
     /// One `AttributedString` per character row, merging horizontal runs of
     /// equal color so each row stays a handful of attribute runs. Empty
     /// cells become spaces (the renderer's backdrop shows through).
     func rowStrings() -> [AttributedString] {
-        var result: [AttributedString] = []
-        result.reserveCapacity(rows)
-        for row in 0..<rows {
+        colorRuns().map { runs in
             var line = AttributedString()
-            var runText = ""
-            var runColor: Color?
-            func flush() {
-                guard !runText.isEmpty else { return }
-                var piece = AttributedString(runText)
-                piece.foregroundColor = runColor
-                line += piece
-                runText = ""
-            }
-            for col in 0..<cols {
-                if let cell = buffer[row * cols + col] {
-                    if runColor != cell.color {
-                        flush()
-                        runColor = cell.color
-                    }
-                    runText.append(cell.glyph)
-                } else {
-                    if runColor != nil {
-                        flush()
-                        runColor = nil
-                    }
-                    runText.append(" ")
+            var cursor = 0
+            for run in runs {
+                if run.col > cursor {
+                    line += AttributedString(String(repeating: " ", count: run.col - cursor))
                 }
+                var piece = AttributedString(run.text)
+                piece.foregroundColor = run.color
+                line += piece
+                cursor = run.col + run.text.count
             }
-            flush()
-            result.append(line)
+            return line
         }
-        return result
     }
 }
