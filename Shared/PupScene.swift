@@ -1,5 +1,38 @@
 import SwiftUI
 
+/// A weather condition independent of time of day — what the scene picker
+/// exposes. Combine with a day/night flag via `PupScene.scene(for:night:)`.
+enum PupCondition: String, CaseIterable, Hashable {
+    case clear
+    case cloudy
+    case rain
+    case thunder
+    case snow
+    case fog
+
+    var label: String {
+        switch self {
+        case .clear: "Clear"
+        case .cloudy: "Cloudy"
+        case .rain: "Rain"
+        case .thunder: "Thunderstorm"
+        case .snow: "Snow"
+        case .fog: "Fog"
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .clear: "sun.max.fill"
+        case .cloudy: "cloud.fill"
+        case .rain: "cloud.rain.fill"
+        case .thunder: "cloud.bolt.rain.fill"
+        case .snow: "cloud.snow.fill"
+        case .fog: "cloud.fog.fill"
+        }
+    }
+}
+
 /// A weather scene. The scene picks the palette, lighting, weather particles
 /// and which behaviours the dog can do; everything is drawn procedurally in
 /// `PupSceneView` from pixel-sprite models.
@@ -19,18 +52,41 @@ enum PupScene: String, Codable, CaseIterable, Hashable {
 
     var label: String {
         switch self {
-        case .clearDay: "Sunny"
-        case .warmDay: "Sunny & Butterflies"
-        case .cloudy: "Cloudy"
-        case .rain: "Rain"
-        case .rainNight: "Night Rain"
-        case .thunder: "Thunderstorm"
-        case .thunderNight: "Night Thunderstorm"
-        case .snow: "Snow"
-        case .snowNight: "Night Snow"
-        case .fog: "Fog"
-        case .fogNight: "Night Fog"
-        case .night: "Clear Night"
+        case .clearDay, .warmDay: "Sunny"
+        case .night: "Clear"
+        default: condition.label
+        }
+    }
+
+    var condition: PupCondition {
+        switch self {
+        case .clearDay, .warmDay, .night: .clear
+        case .cloudy: .cloudy
+        case .rain, .rainNight: .rain
+        case .thunder, .thunderNight: .thunder
+        case .snow, .snowNight: .snow
+        case .fog, .fogNight: .fog
+        }
+    }
+
+    var isNight: Bool {
+        switch self {
+        case .rainNight, .thunderNight, .snowNight, .fogNight, .night: true
+        default: false
+        }
+    }
+
+    /// The scene previewed for a picker selection. Clear days show the richer
+    /// butterflies variant; cloudy nights collapse into the clear night scene,
+    /// mirroring what `from(wmoCode:isDay:temperatureC:)` does with live weather.
+    static func scene(for condition: PupCondition, night: Bool) -> PupScene {
+        switch condition {
+        case .clear: night ? .night : .warmDay
+        case .cloudy: night ? .night : .cloudy
+        case .rain: night ? .rainNight : .rain
+        case .thunder: night ? .thunderNight : .thunder
+        case .snow: night ? .snowNight : .snow
+        case .fog: night ? .fogNight : .fog
         }
     }
 

@@ -88,6 +88,7 @@ struct RootView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        .tint(.orange)
         .onChange(of: selectedTab) { oldValue, newValue in
             if newValue == .add {
                 selectedTab = oldValue
@@ -138,7 +139,7 @@ struct RootView: View {
             Text(tab.title)
                 .font(.caption2.bold())
         }
-        .foregroundStyle(highlighted ? Color.primary : Color.secondary)
+        .foregroundStyle(highlighted ? Color.orange : Color.secondary)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity)
         .background {

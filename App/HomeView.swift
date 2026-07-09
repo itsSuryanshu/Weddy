@@ -2,8 +2,9 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var manager = LiveActivityManager.shared
-    /// nil = mirror the live weather; otherwise browse a specific scene.
-    @State private var previewScene: PupScene?
+    /// nil = mirror the live weather; otherwise browse a specific condition.
+    @State private var previewCondition: PupCondition?
+    @State private var previewNight = false
     @State private var previewLayout = SceneLayout.makeInitial(for: .clearDay)
 
     /// In-app preview wanders much faster than the Live Activity so the
@@ -12,7 +13,7 @@ struct HomeView: View {
     private let previewTimer = Timer.publish(every: 3, on: .main, in: .common).autoconnect()
 
     private var displayedScene: PupScene {
-        previewScene ?? manager.scene
+        previewCondition.map { PupScene.scene(for: $0, night: previewNight) } ?? manager.scene
     }
 
     private var addedLocations: [TrackedLocation] {
@@ -91,35 +92,59 @@ struct HomeView: View {
     }
 
     private var scenePicker: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                sceneChip(nil, label: "Live", symbol: "location.fill")
-                ForEach(PupScene.allCases, id: \.self) { scene in
-                    sceneChip(scene, label: scene.label, symbol: scene.symbolName)
+        HStack(spacing: 8) {
+            Menu {
+                Picker("Scene", selection: $previewCondition) {
+                    Label("Live", systemImage: "location.fill")
+                        .tag(nil as PupCondition?)
+                    ForEach(PupCondition.allCases, id: \.self) { condition in
+                        Label(condition.label, systemImage: condition.symbolName)
+                            .tag(condition as PupCondition?)
+                    }
                 }
+            } label: {
+                dropdownLabel(previewCondition?.label ?? "Live",
+                              symbol: previewCondition?.symbolName ?? "location.fill")
             }
-            .padding(.horizontal, 2)
+
+            Menu {
+                Picker("Time of day", selection: $previewNight) {
+                    Label("Day", systemImage: "sun.max.fill").tag(false)
+                    Label("Night", systemImage: "moon.stars.fill").tag(true)
+                }
+            } label: {
+                dropdownLabel(displayedScene.isNight ? "Night" : "Day",
+                              symbol: displayedScene.isNight ? "moon.stars.fill" : "sun.max.fill")
+            }
+            .disabled(previewCondition == nil)
+            .opacity(previewCondition == nil ? 0.5 : 1)
         }
+        .onChange(of: previewCondition) { animatePreviewChange() }
+        .onChange(of: previewNight) { animatePreviewChange() }
     }
 
-    private func sceneChip(_ scene: PupScene?, label: String, symbol: String) -> some View {
-        let selected = previewScene == scene
-        return Button {
-            withAnimation(.smooth(duration: 0.8)) {
-                previewScene = scene
-                previewLayout = SceneLayout.wander(from: previewLayout,
-                                                   scene: scene ?? manager.scene)
-            }
-        } label: {
-            Label(label, systemImage: symbol)
-                .font(.caption.bold())
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(selected ? Color.accentColor : Color(.secondarySystemBackground),
-                            in: Capsule())
-                .foregroundStyle(selected ? .white : .primary)
+    private func dropdownLabel(_ title: String, symbol: String) -> some View {
+        HStack(spacing: 6) {
+            Label(title, systemImage: symbol)
+                .font(.subheadline.bold())
+            Spacer(minLength: 4)
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.caption2.bold())
+                .foregroundStyle(.secondary)
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity)
+        .background(Color(.secondarySystemBackground), in: Capsule())
+        .foregroundStyle(.primary)
+        .contentShape(Capsule())
+    }
+
+    private func animatePreviewChange() {
+        withAnimation(.smooth(duration: 0.8)) {
+            previewLayout = SceneLayout.wander(from: previewLayout,
+                                               scene: displayedScene)
+        }
     }
 
     private var activityStatus: some View {
