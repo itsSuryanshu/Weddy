@@ -34,6 +34,14 @@ private struct LockScreenView: View {
         WeatherBadgeMetrics.clampedToHardRange(context.state.resolvedBadgeScale)
     }
 
+    private var locationAlignment: Alignment {
+        switch context.state.resolvedLocationPosition {
+        case .topLeft: .topLeading
+        case .bottomLeft: .bottomLeading
+        case .bottomCenter: .bottom
+        }
+    }
+
     var body: some View {
         PupSceneView(scene: context.state.scene,
                      layout: context.state.layout,
@@ -52,13 +60,15 @@ private struct LockScreenView: View {
                     .padding(.trailing, WeatherBadgeMetrics.trailingMargin)
                     .padding(.bottom, WeatherBadgeMetrics.bottomMargin)
             }
-            .overlay(alignment: .bottomLeading) {
+            .overlay(alignment: locationAlignment) {
+                let position = context.state.resolvedLocationPosition
                 Text(context.attributes.locationName)
                     .font(.system(size: 16, weight: .bold, design: .rounded))
                     .foregroundStyle(context.state.scene.ink(for: context.state.resolvedSceneStyle))
                     .lineLimit(1)
-                    .padding(.leading, 10)
-                    .padding(.bottom, WeatherBadgeMetrics.bottomMargin)
+                    .padding(.leading, position == .bottomCenter ? 0 : 10)
+                    .padding(.top, position == .topLeft ? 6 : 0)
+                    .padding(.bottom, position == .topLeft ? 0 : WeatherBadgeMetrics.bottomMargin)
             }
     }
 }

@@ -21,6 +21,7 @@ final class LiveActivityManager {
 
     private static let badgeScaleKey = "com.pupweather.badgeScale"
     private static let sceneStyleKey = "com.pupweather.sceneStyle"
+    private static let locationPositionKey = "com.pupweather.locationPosition"
 
     /// Global user-chosen weather-badge scale, edited from the home-view
     /// preview. Rides along in every ContentState, so the widget never needs
@@ -30,6 +31,9 @@ final class LiveActivityManager {
     /// Global user-chosen scene render style (pixel art vs ASCII), edited in
     /// Settings. Travels the same route as `badgeScale`.
     private(set) var sceneStyle: SceneRenderStyle = .normal
+
+    /// Where the location name sits on the Live Activity, edited in Settings.
+    private(set) var locationPosition: LocationLabelPosition = .bottomLeft
 
     private(set) var trackedLocations: [TrackedLocation] = []
     private(set) var weatherByLocation: [String: CurrentWeather] = [:]
@@ -58,6 +62,8 @@ final class LiveActivityManager {
         badgeScale = UserDefaults.standard.object(forKey: Self.badgeScaleKey) as? Double ?? 1.0
         sceneStyle = UserDefaults.standard.string(forKey: Self.sceneStyleKey)
             .flatMap(SceneRenderStyle.init(rawValue:)) ?? .normal
+        locationPosition = UserDefaults.standard.string(forKey: Self.locationPositionKey)
+            .flatMap(LocationLabelPosition.init(rawValue:)) ?? .bottomLeft
         if trackedLocations.isEmpty {
             trackedLocations = [TrackedLocation(selection: .gps, isPrimary: true)]
         }
@@ -395,7 +401,8 @@ final class LiveActivityManager {
             updatedAt: .now,
             layout: layoutByLocation[id] ?? .makeInitial(for: scene),
             badgeScale: badgeScale,
-            sceneStyle: sceneStyle.rawValue
+            sceneStyle: sceneStyle.rawValue,
+            locationPosition: locationPosition.rawValue
         )
     }
 
@@ -425,7 +432,7 @@ final class LiveActivityManager {
         }
     }
 
-    // MARK: - Scene style
+    // MARK: - Appearance settings
 
     /// Persists a new render style and pushes it to every running activity,
     /// so the Lock Screen switches looks without restarting the activity.
@@ -433,6 +440,21 @@ final class LiveActivityManager {
         guard style != sceneStyle else { return }
         sceneStyle = style
         UserDefaults.standard.set(style.rawValue, forKey: Self.sceneStyleKey)
+        await pushCurrentStateToAllActivities()
+    }
+
+    /// Persists a new location-label position and pushes it to every running
+    /// activity.
+    func setLocationPosition(_ position: LocationLabelPosition) async {
+        guard position != locationPosition else { return }
+        locationPosition = position
+        UserDefaults.standard.set(position.rawValue, forKey: Self.locationPositionKey)
+        await pushCurrentStateToAllActivities()
+    }
+
+    /// Rebuilds and re-pushes content state for every running activity —
+    /// how a changed global setting reaches Lock Screens already showing.
+    private func pushCurrentStateToAllActivities() async {
         for activity in Activity<PupActivityAttributes>.activities {
             let id = activity.attributes.locationID
             let weather = weatherByLocation[id]

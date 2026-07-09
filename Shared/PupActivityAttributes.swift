@@ -16,10 +16,16 @@ struct PupActivityAttributes: ActivityAttributes {
         /// old payloads (nil) and values from future builds both fall back to
         /// `.normal` instead of failing the whole ContentState decode.
         var sceneStyle: String?
+        /// Where the location name sits on the lock screen. Raw string for
+        /// the same decode-leniency reasons as `sceneStyle`.
+        var locationPosition: String?
 
         var resolvedBadgeScale: Double { badgeScale ?? 1.0 }
         var resolvedSceneStyle: SceneRenderStyle {
             sceneStyle.flatMap(SceneRenderStyle.init(rawValue:)) ?? .normal
+        }
+        var resolvedLocationPosition: LocationLabelPosition {
+            locationPosition.flatMap(LocationLabelPosition.init(rawValue:)) ?? .bottomLeft
         }
     }
 

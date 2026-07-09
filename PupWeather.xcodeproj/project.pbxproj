@@ -22,7 +22,9 @@
 		4079A8A5CBC7B0E124545A74 /* PixelArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 302C44836EC19F4329761704 /* PixelArt.swift */; };
 		54B6E7E4E12A2B7C4BA56F22 /* PupScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A16A964D377252D825DC885 /* PupScene.swift */; };
 		5DD14C3A5706FFDAB0211D43 /* PupWeatherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 040762CD10A98E61A21FE45A /* PupWeatherApp.swift */; };
+		5FE7C4F2C730239E85A55D5B /* LocationLabelPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51BC367CBE16875BA8AF320D /* LocationLabelPosition.swift */; };
 		646D89A92DA5157DBCCC9A97 /* PupWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FE4E656AE9FBD9D42B8AEB0 /* PupWidgetBundle.swift */; };
+		69ED641E5862D0AF968DC8D7 /* LocationLabelPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51BC367CBE16875BA8AF320D /* LocationLabelPosition.swift */; };
 		6F3D3158D101DBFD9B2D3F71 /* PupSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62934B26174F1E3D146C4894 /* PupSceneView.swift */; };
 		7551B96ACA1A0FC03F4CD1C7 /* WeatherBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26DC3E980D9E5B54153D0F53 /* WeatherBadge.swift */; };
 		7DC735B1E6CBE2FFD461F521 /* GlassEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E813A82AC4FAA0D8F60A022 /* GlassEffects.swift */; };
@@ -103,6 +105,7 @@
 		4CACCA1307D2515078DDA543 /* GeocodingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeocodingService.swift; sourceTree = "<group>"; };
 		4ED2482957844C8EC282578C /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		500D7A6FFD718680CCACA8DB /* PupLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PupLiveActivity.swift; sourceTree = "<group>"; };
+		51BC367CBE16875BA8AF320D /* LocationLabelPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationLabelPosition.swift; sourceTree = "<group>"; };
 		52F635F9C17C39CD5A77F3E9 /* sprite-dogSleep.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "sprite-dogSleep.png"; sourceTree = "<group>"; };
 		53A15EA45AB94936ECF56368 /* ascii-dog-sit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ascii-dog-sit.png"; sourceTree = "<group>"; };
 		5D0C1527792B4CA125FAEF47 /* card-snow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "card-snow.png"; sourceTree = "<group>"; };
@@ -247,6 +250,7 @@
 				324A2C53B6F1A77D27BEDB79 /* AsciiSceneView.swift */,
 				1EF19C8A9DD71DC329B9312B /* Assets.xcassets */,
 				6E813A82AC4FAA0D8F60A022 /* GlassEffects.swift */,
+				51BC367CBE16875BA8AF320D /* LocationLabelPosition.swift */,
 				302C44836EC19F4329761704 /* PixelArt.swift */,
 				6F7EA3BD8549712055B6A798 /* PupActivityAttributes.swift */,
 				7A16A964D377252D825DC885 /* PupScene.swift */,
@@ -390,6 +394,7 @@
 				7DC735B1E6CBE2FFD461F521 /* GlassEffects.swift in Sources */,
 				D4894A5ABE0A5604833551B5 /* HomeView.swift in Sources */,
 				18C5613BA96893751A5579D8 /* LiveActivityManager.swift in Sources */,
+				69ED641E5862D0AF968DC8D7 /* LocationLabelPosition.swift in Sources */,
 				04DC4BA9FBF29E2B54F54AEE /* LocationPickerView.swift in Sources */,
 				E659E2016F3536A2139FA28E /* LocationSelection.swift in Sources */,
 				24B543C2273495E1D5FBD7CF /* LocationService.swift in Sources */,
@@ -416,6 +421,7 @@
 				B3868FA7D1814945E1A49962 /* AsciiArt.swift in Sources */,
 				8D271680EBD6C1B625369143 /* AsciiSceneView.swift in Sources */,
 				A9F98D5180487F353D0FB499 /* GlassEffects.swift in Sources */,
+				5FE7C4F2C730239E85A55D5B /* LocationLabelPosition.swift in Sources */,
 				8B0FE319610221488CC5128E /* PixelArt.swift in Sources */,
 				E3D97511640D45455EA3A34E /* PupActivityAttributes.swift in Sources */,
 				C6B04E23EF3A0710747899C4 /* PupLiveActivity.swift in Sources */,

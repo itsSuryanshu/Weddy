@@ -4,6 +4,7 @@ struct SettingsView: View {
     @State private var manager = LiveActivityManager.shared
     @State private var isShowingChangePrimarySheet = false
     @State private var sceneStyle: SceneRenderStyle = .normal
+    @State private var locationPosition: LocationLabelPosition = .bottomLeft
 
     private var currentLocationLabel: String {
         guard let primary = manager.primaryLocation else { return "Not set" }
@@ -40,12 +41,24 @@ struct SettingsView: View {
                         }
                     }
                     .pickerStyle(.menu)
+                    Picker("Location Position", selection: $locationPosition) {
+                        ForEach(LocationLabelPosition.allCases, id: \.self) { position in
+                            Text(position.label).tag(position)
+                        }
+                    }
+                    .pickerStyle(.menu)
                 }
             }
             .navigationTitle("Settings")
-            .task { sceneStyle = manager.sceneStyle }
+            .task {
+                sceneStyle = manager.sceneStyle
+                locationPosition = manager.locationPosition
+            }
             .onChange(of: sceneStyle) { _, newStyle in
                 Task { await manager.setSceneStyle(newStyle) }
+            }
+            .onChange(of: locationPosition) { _, newPosition in
+                Task { await manager.setLocationPosition(newPosition) }
             }
             .sheet(isPresented: $isShowingChangePrimarySheet) {
                 LocationPickerView(
