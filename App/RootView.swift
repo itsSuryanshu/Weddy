@@ -47,12 +47,12 @@ struct RootView: View {
                 Text(label)
                     .font(.caption2.bold())
             }
-            .foregroundStyle(selected ? Color.orange : Color.secondary)
+            .foregroundStyle(selected ? Color.primary : Color.secondary)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             .background {
                 if selected {
-                    Capsule().fill(Color.orange.opacity(0.18))
+                    Capsule().fill(.thinMaterial)
                 }
             }
         }

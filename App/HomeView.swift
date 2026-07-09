@@ -167,7 +167,7 @@ struct HomeView: View {
         } label: {
             Image(systemName: "plus")
                 .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(.orange)
+                .foregroundStyle(.white)
                 .frame(width: 56, height: 56)
         }
         .glassButton(tint: .orange, in: Circle())
