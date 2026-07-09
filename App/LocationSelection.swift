@@ -24,8 +24,28 @@ struct TrackedLocation: Codable, Equatable, Identifiable {
     var selection: LocationSelection
     var isPrimary: Bool
     var addedAt: Date = .now
+    /// Hidden locations stay tracked (weather still refreshes for the in-app
+    /// card) but their Live Activity is ended and never auto-restarted until
+    /// the user unhides them.
+    var isHidden: Bool = false
 
     var id: String { selection.stableID }
+}
+
+extension TrackedLocation {
+    private enum CodingKeys: String, CodingKey {
+        case selection, isPrimary, addedAt, isHidden
+    }
+
+    /// Custom decode (in an extension, so the memberwise init survives) that
+    /// tolerates records saved before `isHidden` existed.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        selection = try container.decode(LocationSelection.self, forKey: .selection)
+        isPrimary = try container.decode(Bool.self, forKey: .isPrimary)
+        addedAt = try container.decodeIfPresent(Date.self, forKey: .addedAt) ?? .now
+        isHidden = try container.decodeIfPresent(Bool.self, forKey: .isHidden) ?? false
+    }
 }
 
 /// Persists the set of tracked locations across launches. UserDefaults +

@@ -63,12 +63,22 @@ struct HomeView: View {
                             LocationCard(location: location, manager: manager)
                                 .listRowSeparator(.hidden)
                                 .listRowBackground(Color.clear)
-                        }
-                        .onDelete { indexSet in
-                            for index in indexSet {
-                                let location = addedLocations[index]
-                                Task { await manager.removeLocation(id: location.id) }
-                            }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    // Declared first = pinned to the trailing
+                                    // edge, so Hide lands to Delete's left.
+                                    Button(role: .destructive) {
+                                        Task { await manager.removeLocation(id: location.id) }
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                    Button {
+                                        Task { await manager.setHidden(!location.isHidden, for: location.id) }
+                                    } label: {
+                                        Label(location.isHidden ? "Unhide" : "Hide",
+                                              systemImage: location.isHidden ? "eye" : "eye.slash")
+                                    }
+                                    .tint(.indigo)
+                                }
                         }
                     }
                 }
@@ -302,6 +312,12 @@ private struct LocationCard: View {
                 Spacer()
                 if isRefreshing {
                     ProgressView()
+                } else if location.isHidden {
+                    // Unhiding lives in the same swipe menu as Hide, so the
+                    // card only signals the state instead of offering Resume.
+                    Label("Hidden", systemImage: "eye.slash")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
                 } else if !isRunning {
                     Button("Resume") {
                         Task { await manager.ensureActivityRunning(for: location) }

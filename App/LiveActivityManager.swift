@@ -141,6 +141,26 @@ final class LiveActivityManager {
         syncActivityState()
     }
 
+    /// Hides or unhides a tracked location. Hiding ends its Live Activity
+    /// immediately (the location stays tracked and its card keeps showing
+    /// weather); unhiding starts the activity again.
+    func setHidden(_ hidden: Bool, for id: String) async {
+        guard let index = trackedLocations.firstIndex(where: { $0.id == id }),
+              trackedLocations[index].isHidden != hidden else { return }
+        trackedLocations[index].isHidden = hidden
+        TrackedLocationStore.save(trackedLocations)
+        if hidden {
+            wanderTasks[id]?.cancel()
+            wanderTasks[id] = nil
+            if let activity = activity(for: id) {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            }
+            syncActivityState()
+        } else {
+            await ensureActivityRunning(for: trackedLocations[index])
+        }
+    }
+
     func setPrimaryLocation(_ selection: LocationSelection) async {
         guard var primary = primaryLocation, primary.selection != selection else { return }
         let oldID = primary.id
@@ -181,6 +201,13 @@ final class LiveActivityManager {
         guard !ensuringIDs.contains(id) else { return }
         ensuringIDs.insert(id)
         defer { ensuringIDs.remove(id) }
+
+        // Hidden locations keep their in-app card fresh but never get a
+        // Live Activity until the user unhides them.
+        guard !location.isHidden else {
+            await refresh(for: id)
+            return
+        }
 
         guard activitiesEnabled else {
             log.error("Live Activities are not enabled for this app")
@@ -408,7 +435,7 @@ final class LiveActivityManager {
     private func syncActivityState() {
         let ids = Set(Activity<PupActivityAttributes>.activities.map(\.attributes.locationID))
         runningLocationIDs = ids
-        if let primary = primaryLocation, !ids.contains(primary.id) {
+        if let primary = primaryLocation, !primary.isHidden, !ids.contains(primary.id) {
             Task { await self.ensureActivityRunning(for: primary) }
         }
     }
