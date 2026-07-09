@@ -6,6 +6,21 @@ struct HomeView: View {
     @State private var previewScene: PupScene?
     @State private var previewLayout = SceneLayout.makeInitial(for: .clearDay)
 
+    /// Committed badge scale, seeded from the manager and written back on
+    /// every drag end.
+    @State private var badgeScale: Double = 1.0
+    /// Non-nil while the resize handle is being dragged.
+    @State private var liveScale: Double?
+    @State private var dragStartScale: Double?
+    /// Measured preview size; the 30%-area cap is computed against it.
+    @State private var previewSize: CGSize = .zero
+
+    private var effectiveScale: Double { liveScale ?? badgeScale }
+
+    private var previewTemperatureC: Double {
+        manager.primaryLocation.flatMap { manager.weatherByLocation[$0.id]?.temperatureC } ?? 20
+    }
+
     /// In-app preview wanders much faster than the Live Activity so the
     /// scene feels alive while you watch it — every few seconds the dog
     /// hops to a new spot and the butterflies flutter ahead of it.
@@ -72,6 +87,7 @@ struct HomeView: View {
             .listStyle(.plain)
             .navigationTitle("PupWeather")
             .task {
+                badgeScale = manager.badgeScale
                 await manager.ensureActivityRunning()
             }
             .refreshable { await manager.ensureActivityRunning() }
@@ -85,9 +101,74 @@ struct HomeView: View {
     }
 
     private var scenePreview: some View {
-        PupSceneView(scene: displayedScene, layout: previewLayout, minHeight: 120)
+        PupSceneView(scene: displayedScene, layout: previewLayout, minHeight: 120,
+                     reservedTrailingWidth: WeatherBadgeMetrics.reservedWidth(
+                         temperatureC: previewTemperatureC,
+                         label: displayedScene.label,
+                         scale: effectiveScale))
             .frame(height: 120)
+            .overlay(alignment: .bottomTrailing) { badgeEditor }
             .clipShape(RoundedRectangle(cornerRadius: 20))
+            .onGeometryChange(for: CGSize.self, of: { $0.size }) { previewSize = $0 }
+    }
+
+    /// The Live Activity's weather badge, permanently in edit mode: a dashed
+    /// box around the text with a glass resize handle on its top-left corner.
+    /// Only the text ships to the Lock Screen — the chrome is app-only.
+    private var badgeEditor: some View {
+        WeatherBadge(scene: displayedScene,
+                     temperatureC: previewTemperatureC,
+                     scale: effectiveScale)
+            .padding(6)
+            .overlay {
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(.white.opacity(0.85),
+                                  style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+            }
+            .overlay(alignment: .topLeading) {
+                resizeHandle.offset(x: -14, y: -14)
+            }
+            // Hit-slop so the offset handle keeps a full touch target, plus
+            // the same corner margins the widget uses.
+            .padding([.top, .leading], 16)
+            .padding(.trailing, WeatherBadgeMetrics.trailingMargin)
+            .padding(.bottom, WeatherBadgeMetrics.bottomMargin)
+    }
+
+    private var resizeHandle: some View {
+        Image(systemName: "arrow.up.left.and.arrow.down.right")
+            .font(.system(size: 12, weight: .bold))
+            .foregroundStyle(.primary)
+            .frame(width: 28, height: 28)
+            .glassButton(in: Circle())
+            .contentShape(Circle().inset(by: -8))
+            .gesture(resizeGesture)
+    }
+
+    /// Proportional resize anchored bottom-right: the overlay alignment pins
+    /// that corner, so scaling alone grows the box up-and-left toward the
+    /// handle. Dragging the handle away from the anchor (up-left) grows it,
+    /// toward the anchor shrinks it, via the diagonal-length ratio.
+    private var resizeGesture: some Gesture {
+        DragGesture(minimumDistance: 1)
+            .onChanged { value in
+                let start = dragStartScale ?? badgeScale
+                dragStartScale = start
+                let intrinsic = WeatherBadgeMetrics.intrinsicSize(
+                    temperatureC: previewTemperatureC, label: displayedScene.label)
+                let startBox = CGSize(width: intrinsic.width * start + 12,
+                                      height: intrinsic.height * start + 12)
+                let newWidth = max(startBox.width - value.translation.width, 1)
+                let newHeight = max(startBox.height - value.translation.height, 1)
+                let ratio = hypot(newWidth, newHeight) / hypot(startBox.width, startBox.height)
+                liveScale = WeatherBadgeMetrics.clamped(start * ratio, in: previewSize)
+            }
+            .onEnded { _ in
+                if let final = liveScale { badgeScale = final }
+                liveScale = nil
+                dragStartScale = nil
+                Task { await manager.setBadgeScale(badgeScale) }
+            }
     }
 
     private var scenePicker: some View {

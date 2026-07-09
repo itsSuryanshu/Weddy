@@ -13,13 +13,17 @@ struct PupSceneView: View {
     /// Live Activity lock-screen views must declare an explicit size;
     /// GeometryReader alone often collapses to zero there.
     var minHeight: CGFloat = 120
+    /// Points at the trailing edge the dog must stay clear of (the weather
+    /// badge's footprint). 0 = the dog roams the full field.
+    var reservedTrailingWidth: CGFloat = 0
 
     var body: some View {
         GeometryReader { proxy in
             let composer = SceneComposer(scene: scene,
                                          layout: layout,
                                          width: max(proxy.size.width, minHeight),
-                                         height: minHeight)
+                                         height: minHeight,
+                                         reservedTrailingWidth: reservedTrailingWidth)
             let dog = composer.dogGroup()
             ZStack(alignment: .topLeading) {
                 PixelPaintingView(layers: composer.backgroundLayers())
@@ -32,6 +36,7 @@ struct PupSceneView: View {
         }
         .frame(maxWidth: .infinity, minHeight: minHeight, idealHeight: minHeight, maxHeight: minHeight)
         .animation(.smooth(duration: 1.6), value: layout)
+        .animation(.smooth(duration: 0.35), value: reservedTrailingWidth)
     }
 }
 
@@ -44,6 +49,7 @@ struct SceneComposer {
     let layout: SceneLayout
     let pixel: CGFloat
     let cols: Int
+    let reservedTrailingWidth: CGFloat
 
     /// Art grid height in pixels; width adapts to the view.
     static let rows = 60
@@ -63,11 +69,13 @@ struct SceneComposer {
 
     private let style: SceneStyle
 
-    init(scene: PupScene, layout: SceneLayout, width: CGFloat, height: CGFloat) {
+    init(scene: PupScene, layout: SceneLayout, width: CGFloat, height: CGFloat,
+         reservedTrailingWidth: CGFloat = 0) {
         self.scene = scene
         self.layout = layout
         self.pixel = height / CGFloat(Self.rows)
         self.cols = Int((width / max(pixel, 0.5)).rounded(.up))
+        self.reservedTrailingWidth = reservedTrailingWidth
         self.style = SceneStyle.for(scene)
     }
 
@@ -208,7 +216,11 @@ struct SceneComposer {
 
     private var dogX: Double {
         let width = Double(dogSprite.width) * dogScale
-        let usable = max(Double(cols) - width - 12, 1)
+        // The badge keep-out shrinks the roaming field from the right;
+        // dogUnit is normalized over `usable`, so every wander target lands
+        // inside the reduced field automatically.
+        let reservedCols = Double(reservedTrailingWidth) / Double(max(pixel, 0.5))
+        let usable = max(Double(cols) - width - 12 - reservedCols, 1)
         return 6 + layout.dogUnit * usable
     }
 

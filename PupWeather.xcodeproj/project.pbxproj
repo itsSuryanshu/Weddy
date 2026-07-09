@@ -23,6 +23,7 @@
 		5DD14C3A5706FFDAB0211D43 /* PupWeatherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 040762CD10A98E61A21FE45A /* PupWeatherApp.swift */; };
 		646D89A92DA5157DBCCC9A97 /* PupWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FE4E656AE9FBD9D42B8AEB0 /* PupWidgetBundle.swift */; };
 		6F3D3158D101DBFD9B2D3F71 /* PupSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62934B26174F1E3D146C4894 /* PupSceneView.swift */; };
+		7551B96ACA1A0FC03F4CD1C7 /* WeatherBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26DC3E980D9E5B54153D0F53 /* WeatherBadge.swift */; };
 		7DC735B1E6CBE2FFD461F521 /* GlassEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E813A82AC4FAA0D8F60A022 /* GlassEffects.swift */; };
 		8707115A77052DCB4B7853E5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1EF19C8A9DD71DC329B9312B /* Assets.xcassets */; };
 		8B0FE319610221488CC5128E /* PixelArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 302C44836EC19F4329761704 /* PixelArt.swift */; };
@@ -35,6 +36,7 @@
 		D40CB9E2106746B5DC31D4C1 /* SceneLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C503411BFEDE5A1F1101D6A8 /* SceneLayout.swift */; };
 		D4894A5ABE0A5604833551B5 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED2482957844C8EC282578C /* HomeView.swift */; };
 		E3D97511640D45455EA3A34E /* PupActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7EA3BD8549712055B6A798 /* PupActivityAttributes.swift */; };
+		E5547C22DC38F5A0415A4951 /* WeatherBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26DC3E980D9E5B54153D0F53 /* WeatherBadge.swift */; };
 		E659E2016F3536A2139FA28E /* LocationSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD17436F4F903825E0EE8C2 /* LocationSelection.swift */; };
 		EF3173D5DC6635E1B35D939E /* PupActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7EA3BD8549712055B6A798 /* PupActivityAttributes.swift */; };
 /* End PBXBuildFile section */
@@ -71,6 +73,7 @@
 		1DC1D4E6BE8FA2D768D96A82 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		1EF19C8A9DD71DC329B9312B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		24C722ECE128B6943F355804 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		26DC3E980D9E5B54153D0F53 /* WeatherBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherBadge.swift; sourceTree = "<group>"; };
 		302C44836EC19F4329761704 /* PixelArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelArt.swift; sourceTree = "<group>"; };
 		35290F392E269E00DCBFA4C8 /* PupWeather.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PupWeather.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		36A479A67347A56C46AB4B07 /* PupWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PupWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -149,6 +152,7 @@
 				62934B26174F1E3D146C4894 /* PupSceneView.swift */,
 				0607C4C37955196FAA0C3C7E /* PupSprites.swift */,
 				C503411BFEDE5A1F1101D6A8 /* SceneLayout.swift */,
+				26DC3E980D9E5B54153D0F53 /* WeatherBadge.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -292,6 +296,7 @@
 				9A4D0BC8FCEEE5E8C8D7371F /* RootView.swift in Sources */,
 				4065A67AA56BF0F679B66D6F /* SceneLayout.swift in Sources */,
 				2C56F288476A7C31CBDD77F5 /* SettingsView.swift in Sources */,
+				7551B96ACA1A0FC03F4CD1C7 /* WeatherBadge.swift in Sources */,
 				0FAC15B989FD87E2CBE74D0C /* WeatherService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -309,6 +314,7 @@
 				CF73FB917DAD50F5EA6C014E /* PupSprites.swift in Sources */,
 				646D89A92DA5157DBCCC9A97 /* PupWidgetBundle.swift in Sources */,
 				D40CB9E2106746B5DC31D4C1 /* SceneLayout.swift in Sources */,
+				E5547C22DC38F5A0415A4951 /* WeatherBadge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
