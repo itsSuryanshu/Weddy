@@ -31,7 +31,7 @@ struct RootView: View {
             tabBarButton(.settings, label: "Settings", symbol: "gearshape.fill")
         }
         .padding(6)
-        .glassButton(tint: .orange, in: Capsule())
+        .glassButton(in: Capsule())
     }
 
     private func tabBarButton(_ tab: Tab, label: String, symbol: String) -> some View {

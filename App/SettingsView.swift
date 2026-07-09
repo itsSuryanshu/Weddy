@@ -21,7 +21,7 @@ struct SettingsView: View {
                         Spacer()
                         Text(currentLocationLabel)
                             .foregroundStyle(.secondary)
-                        Button("Change") {
+                        Button("Edit") {
                             isShowingChangePrimarySheet = true
                         }
                         .buttonStyle(.plain)
