@@ -19,6 +19,13 @@ final class LiveActivityManager {
     /// Background moves ride along with BGAppRefresh weather updates.
     private static let wanderInterval: Duration = .seconds(120)
 
+    private static let badgeScaleKey = "com.pupweather.badgeScale"
+
+    /// Global user-chosen weather-badge scale, edited from the home-view
+    /// preview. Rides along in every ContentState, so the widget never needs
+    /// shared storage. Persisted app-side across launches.
+    private(set) var badgeScale: Double = 1.0
+
     private(set) var trackedLocations: [TrackedLocation] = []
     private(set) var weatherByLocation: [String: CurrentWeather] = [:]
     private(set) var placeNameByLocation: [String: String] = [:]
@@ -40,6 +47,10 @@ final class LiveActivityManager {
 
     private init() {
         trackedLocations = TrackedLocationStore.load()
+        // `object(forKey:)`, not `double(forKey:)` — the latter returns 0
+        // when the key is missing, which would clamp up to minScale but
+        // still lose the "never customized" default.
+        badgeScale = UserDefaults.standard.object(forKey: Self.badgeScaleKey) as? Double ?? 1.0
         if trackedLocations.isEmpty {
             trackedLocations = [TrackedLocation(selection: .gps, isPrimary: true)]
         }
@@ -348,8 +359,35 @@ final class LiveActivityManager {
             scene: scene,
             temperatureC: temperatureC,
             updatedAt: .now,
-            layout: layoutByLocation[id] ?? .makeInitial(for: scene)
+            layout: layoutByLocation[id] ?? .makeInitial(for: scene),
+            badgeScale: badgeScale
         )
+    }
+
+    // MARK: - Badge size
+
+    /// Persists a new badge scale and pushes it to every running activity.
+    /// Called once per resize (on drag end), so it costs one ActivityKit
+    /// update per activity. Each activity keeps its current layout — the
+    /// scene view slides the dog out of the enlarged keep-out zone instead
+    /// of teleporting it.
+    func setBadgeScale(_ scale: Double) async {
+        let clamped = WeatherBadgeMetrics.clampedToHardRange(scale)
+        guard clamped != badgeScale else { return }
+        badgeScale = clamped
+        UserDefaults.standard.set(clamped, forKey: Self.badgeScaleKey)
+        for activity in Activity<PupActivityAttributes>.activities {
+            let id = activity.attributes.locationID
+            let weather = weatherByLocation[id]
+            let state = contentState(
+                scene: weather?.scene ?? .clearDay,
+                temperatureC: weather?.temperatureC ?? 20,
+                id: id
+            )
+            await activity.update(
+                .init(state: state, staleDate: Date(timeIntervalSinceNow: 3 * 3600))
+            )
+        }
     }
 
     private func reverseGeocode(_ location: CLLocation, for id: String) async {

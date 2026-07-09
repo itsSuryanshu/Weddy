@@ -28,14 +28,25 @@ struct PupLiveActivity: Widget {
 private struct LockScreenView: View {
     let context: ActivityViewContext<PupActivityAttributes>
 
+    private var badgeScale: Double {
+        WeatherBadgeMetrics.clampedToHardRange(context.state.resolvedBadgeScale)
+    }
+
     var body: some View {
         PupSceneView(scene: context.state.scene,
                      layout: context.state.layout,
-                     minHeight: 120)
+                     minHeight: 120,
+                     reservedTrailingWidth: WeatherBadgeMetrics.reservedWidth(
+                         temperatureC: context.state.temperatureC,
+                         label: context.state.scene.label,
+                         scale: badgeScale))
             .frame(maxWidth: .infinity, minHeight: 120)
             .overlay(alignment: .bottomTrailing) {
                 WeatherBadge(scene: context.state.scene,
-                             temperatureC: context.state.temperatureC)
+                             temperatureC: context.state.temperatureC,
+                             scale: badgeScale)
+                    .padding(.trailing, WeatherBadgeMetrics.trailingMargin)
+                    .padding(.bottom, WeatherBadgeMetrics.bottomMargin)
             }
             .overlay(alignment: .topLeading) {
                 Text(context.attributes.locationName)
@@ -45,27 +56,5 @@ private struct LockScreenView: View {
                     .padding(.leading, 10)
                     .padding(.top, 6)
             }
-    }
-}
-
-/// Big friendly temperature + condition pinned over the bottom-right of the
-/// grass. SF Rounded heavy keeps the chunky pixel-art vibe without shipping
-/// a custom font.
-struct WeatherBadge: View {
-    let scene: PupScene
-    let temperatureC: Double
-
-    var body: some View {
-        VStack(alignment: .trailing, spacing: -4) {
-            Text("\(Int(temperatureC.rounded()))°")
-                .font(.system(size: 30, weight: .heavy, design: .rounded))
-            Text(scene.label)
-                .font(.system(size: 13, weight: .bold, design: .rounded))
-        }
-        .foregroundStyle(scene.ink)
-        .lineLimit(1)
-        .minimumScaleFactor(0.7)
-        .padding(.trailing, 10)
-        .padding(.bottom, 6)
     }
 }

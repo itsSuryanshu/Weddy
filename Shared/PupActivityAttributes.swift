@@ -9,6 +9,11 @@ struct PupActivityAttributes: ActivityAttributes {
         /// Where the dog is and what it's doing. Each activity update sends a
         /// fresh layout, which is what makes the dog wander around the field.
         var layout: SceneLayout
+        /// Global user-chosen weather-badge scale. Optional so payloads
+        /// written by builds without the key still decode; nil means 1.0.
+        var badgeScale: Double?
+
+        var resolvedBadgeScale: Double { badgeScale ?? 1.0 }
     }
 
     var startedAt: Date
