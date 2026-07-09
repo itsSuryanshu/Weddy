@@ -48,13 +48,13 @@ private struct LockScreenView: View {
                     .padding(.trailing, WeatherBadgeMetrics.trailingMargin)
                     .padding(.bottom, WeatherBadgeMetrics.bottomMargin)
             }
-            .overlay(alignment: .topLeading) {
+            .overlay(alignment: .bottomLeading) {
                 Text(context.attributes.locationName)
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
                     .foregroundStyle(context.state.scene.ink)
                     .lineLimit(1)
                     .padding(.leading, 10)
-                    .padding(.top, 6)
+                    .padding(.bottom, WeatherBadgeMetrics.bottomMargin)
             }
     }
 }
