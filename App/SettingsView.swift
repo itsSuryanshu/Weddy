@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @State private var manager = LiveActivityManager.shared
     @State private var isShowingChangePrimarySheet = false
+    @State private var sceneStyle: SceneRenderStyle = .normal
 
     private var currentLocationLabel: String {
         guard let primary = manager.primaryLocation else { return "Not set" }
@@ -32,8 +33,20 @@ struct SettingsView: View {
                         .glassButton(tint: .orange, in: Capsule())
                     }
                 }
+                Section("Appearance") {
+                    Picker("Scene Style", selection: $sceneStyle) {
+                        ForEach(SceneRenderStyle.allCases, id: \.self) { style in
+                            Text(style.label).tag(style)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
             }
             .navigationTitle("Settings")
+            .task { sceneStyle = manager.sceneStyle }
+            .onChange(of: sceneStyle) { _, newStyle in
+                Task { await manager.setSceneStyle(newStyle) }
+            }
             .sheet(isPresented: $isShowingChangePrimarySheet) {
                 LocationPickerView(
                     mode: .replacePrimary,

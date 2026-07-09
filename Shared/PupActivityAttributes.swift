@@ -12,8 +12,15 @@ struct PupActivityAttributes: ActivityAttributes {
         /// Global user-chosen weather-badge scale. Optional so payloads
         /// written by builds without the key still decode; nil means 1.0.
         var badgeScale: Double?
+        /// Global user-chosen scene render style, stored as the raw string so
+        /// old payloads (nil) and values from future builds both fall back to
+        /// `.normal` instead of failing the whole ContentState decode.
+        var sceneStyle: String?
 
         var resolvedBadgeScale: Double { badgeScale ?? 1.0 }
+        var resolvedSceneStyle: SceneRenderStyle {
+            sceneStyle.flatMap(SceneRenderStyle.init(rawValue:)) ?? .normal
+        }
     }
 
     var startedAt: Date

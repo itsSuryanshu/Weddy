@@ -20,11 +20,16 @@ final class LiveActivityManager {
     private static let wanderInterval: Duration = .seconds(120)
 
     private static let badgeScaleKey = "com.pupweather.badgeScale"
+    private static let sceneStyleKey = "com.pupweather.sceneStyle"
 
     /// Global user-chosen weather-badge scale, edited from the home-view
     /// preview. Rides along in every ContentState, so the widget never needs
     /// shared storage. Persisted app-side across launches.
     private(set) var badgeScale: Double = 1.0
+
+    /// Global user-chosen scene render style (pixel art vs ASCII), edited in
+    /// Settings. Travels the same route as `badgeScale`.
+    private(set) var sceneStyle: SceneRenderStyle = .normal
 
     private(set) var trackedLocations: [TrackedLocation] = []
     private(set) var weatherByLocation: [String: CurrentWeather] = [:]
@@ -51,6 +56,8 @@ final class LiveActivityManager {
         // when the key is missing, which would clamp up to minScale but
         // still lose the "never customized" default.
         badgeScale = UserDefaults.standard.object(forKey: Self.badgeScaleKey) as? Double ?? 1.0
+        sceneStyle = UserDefaults.standard.string(forKey: Self.sceneStyleKey)
+            .flatMap(SceneRenderStyle.init(rawValue:)) ?? .normal
         if trackedLocations.isEmpty {
             trackedLocations = [TrackedLocation(selection: .gps, isPrimary: true)]
         }
@@ -387,7 +394,8 @@ final class LiveActivityManager {
             temperatureC: temperatureC,
             updatedAt: .now,
             layout: layoutByLocation[id] ?? .makeInitial(for: scene),
-            badgeScale: badgeScale
+            badgeScale: badgeScale,
+            sceneStyle: sceneStyle.rawValue
         )
     }
 
@@ -403,6 +411,28 @@ final class LiveActivityManager {
         guard clamped != badgeScale else { return }
         badgeScale = clamped
         UserDefaults.standard.set(clamped, forKey: Self.badgeScaleKey)
+        for activity in Activity<PupActivityAttributes>.activities {
+            let id = activity.attributes.locationID
+            let weather = weatherByLocation[id]
+            let state = contentState(
+                scene: weather?.scene ?? .clearDay,
+                temperatureC: weather?.temperatureC ?? 20,
+                id: id
+            )
+            await activity.update(
+                .init(state: state, staleDate: Date(timeIntervalSinceNow: 3 * 3600))
+            )
+        }
+    }
+
+    // MARK: - Scene style
+
+    /// Persists a new render style and pushes it to every running activity,
+    /// so the Lock Screen switches looks without restarting the activity.
+    func setSceneStyle(_ style: SceneRenderStyle) async {
+        guard style != sceneStyle else { return }
+        sceneStyle = style
+        UserDefaults.standard.set(style.rawValue, forKey: Self.sceneStyleKey)
         for activity in Activity<PupActivityAttributes>.activities {
             let id = activity.attributes.locationID
             let weather = weatherByLocation[id]

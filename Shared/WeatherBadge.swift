@@ -13,6 +13,7 @@ struct WeatherBadge: View {
     let scene: PupScene
     let temperatureC: Double
     var scale: Double = 1.0
+    var style: SceneRenderStyle = .normal
 
     var body: some View {
         VStack(alignment: .trailing, spacing: WeatherBadgeMetrics.spacing * scale) {
@@ -21,7 +22,7 @@ struct WeatherBadge: View {
             Text(scene.label)
                 .font(.system(size: WeatherBadgeMetrics.labelSize * scale, weight: .bold, design: .rounded))
         }
-        .foregroundStyle(scene.ink)
+        .foregroundStyle(scene.ink(for: style))
         .lineLimit(1)
         .minimumScaleFactor(0.7)
     }

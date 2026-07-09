@@ -4,6 +4,8 @@
 //   swiftc -parse-as-library -D RENDER_TOOL \
 //       tools/render_scenes.swift Shared/PixelArt.swift Shared/PupSprites.swift \
 //       Shared/PupScene.swift Shared/SceneLayout.swift Shared/PupSceneView.swift \
+//       Shared/ScenePalette.swift Shared/SceneRenderStyle.swift \
+//       Shared/AsciiArt.swift Shared/AsciiSceneView.swift \
 //       -o /tmp/render_scenes && /tmp/render_scenes
 //
 // (The Shared files are pure SwiftUI, so they compile for macOS as-is.)
@@ -51,6 +53,28 @@ struct RenderScenes {
             let view = PupSceneView(scene: scene, layout: .preview(for: scene), minHeight: 120)
                 .frame(width: 380, height: 120)
             write(view, to: outDir, name: scene.rawValue)
+        }
+
+        // ASCII style: every scene, plus a double-size card for glyph-level
+        // inspection and each dog pose up close.
+        for scene in PupScene.allCases {
+            let view = PupSceneView(scene: scene, layout: .preview(for: scene),
+                                    minHeight: 120, style: .ascii)
+                .frame(width: 380, height: 120)
+            write(view, to: outDir, name: "ascii-\(scene.rawValue)")
+        }
+        write(PupSceneView(scene: .clearDay, layout: .preview(for: .clearDay),
+                           minHeight: 240, style: .ascii)
+                .frame(width: 760, height: 240),
+              to: outDir, name: "ascii-big-clearDay")
+        for action in [DogAction.sit, .trot, .jump, .sniff, .sleep] {
+            var layout = SceneLayout.preview(for: .clearDay)
+            layout.dogAction = action
+            layout.dogUnit = 0.5
+            write(PupSceneView(scene: .clearDay, layout: layout,
+                               minHeight: 240, style: .ascii)
+                    .frame(width: 760, height: 240),
+                  to: outDir, name: "ascii-dog-\(action)")
         }
 
         // Mock lock-screen cards with the weather badge (mirrors the widget's

@@ -116,7 +116,8 @@ struct HomeView: View {
                      reservedTrailingWidth: WeatherBadgeMetrics.reservedWidth(
                          temperatureC: previewTemperatureC,
                          label: displayedScene.label,
-                         scale: effectiveScale))
+                         scale: effectiveScale),
+                     style: manager.sceneStyle)
             .frame(height: 120)
             .overlay(alignment: .bottomTrailing) { badgeEditor }
             .clipShape(RoundedRectangle(cornerRadius: 20))
@@ -129,7 +130,8 @@ struct HomeView: View {
     private var badgeEditor: some View {
         WeatherBadge(scene: displayedScene,
                      temperatureC: previewTemperatureC,
-                     scale: effectiveScale)
+                     scale: effectiveScale,
+                     style: manager.sceneStyle)
             .padding(6)
             .overlay {
                 RoundedRectangle(cornerRadius: 10)

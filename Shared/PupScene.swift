@@ -148,6 +148,12 @@ enum PupScene: String, Codable, CaseIterable, Hashable {
         self == .snow ? Color(px: 0x33628F) : .white
     }
 
+    /// Style-aware ink: the ASCII scene sits on a terminal-dark backdrop in
+    /// every scene, so its overlay text is always white.
+    func ink(for style: SceneRenderStyle) -> Color {
+        style == .ascii ? .white : ink
+    }
+
     /// Maps an Open-Meteo WMO weather code + daylight flag + temperature to a scene.
     static func from(wmoCode: Int, isDay: Bool, temperatureC: Double) -> PupScene {
         let base: PupScene

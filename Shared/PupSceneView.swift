@@ -16,8 +16,28 @@ struct PupSceneView: View {
     /// Points at the trailing edge the dog must stay clear of (the weather
     /// badge's footprint). 0 = the dog roams the full field.
     var reservedTrailingWidth: CGFloat = 0
+    /// Pixel art or colored-ASCII terminal art.
+    var style: SceneRenderStyle = .normal
 
     var body: some View {
+        Group {
+            if style == .ascii {
+                AsciiSceneRenderer(scene: scene,
+                                   layout: layout,
+                                   minHeight: minHeight,
+                                   reservedTrailingWidth: reservedTrailingWidth)
+            } else {
+                pixelBody
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: minHeight, idealHeight: minHeight, maxHeight: minHeight)
+        // The ASCII dog is baked into the text grid, so a layout change is a
+        // discrete swap there; only the pixel dog slides.
+        .animation(style == .normal ? .smooth(duration: 1.6) : nil, value: layout)
+        .animation(.smooth(duration: 0.35), value: reservedTrailingWidth)
+    }
+
+    private var pixelBody: some View {
         GeometryReader { proxy in
             let composer = SceneComposer(scene: scene,
                                          layout: layout,
@@ -34,9 +54,6 @@ struct PupSceneView: View {
             .frame(width: proxy.size.width, height: minHeight, alignment: .topLeading)
             .clipped()
         }
-        .frame(maxWidth: .infinity, minHeight: minHeight, idealHeight: minHeight, maxHeight: minHeight)
-        .animation(.smooth(duration: 1.6), value: layout)
-        .animation(.smooth(duration: 0.35), value: reservedTrailingWidth)
     }
 }
 
@@ -52,13 +69,10 @@ struct SceneComposer {
     let reservedTrailingWidth: CGFloat
 
     /// Art grid height in pixels; width adapts to the view.
-    static let rows = 60
-    /// Where the hills meet the field.
-    private let horizonY = 34
-    /// Top of the foreground grass band.
-    private let frontY = 52
-    /// Where the dog's paws rest (slightly inside the front grass for depth).
-    private let feetY = 55
+    static let rows = SceneGeometry.rows
+    private let horizonY = SceneGeometry.horizonY
+    private let frontY = SceneGeometry.frontY
+    private let feetY = SceneGeometry.feetY
     /// The dog is the hero — chunkier pixels than the scenery, like the
     /// reference art where the pup dominates the frame. The sit sprite is
     /// much taller than the side-view poses, so it gets a smaller scale to
@@ -67,7 +81,7 @@ struct SceneComposer {
         layout.dogAction == .sit ? 1.2 : 1.5
     }
 
-    private let style: SceneStyle
+    private let style: ScenePalette
 
     init(scene: PupScene, layout: SceneLayout, width: CGFloat, height: CGFloat,
          reservedTrailingWidth: CGFloat = 0) {
@@ -76,7 +90,7 @@ struct SceneComposer {
         self.pixel = height / CGFloat(Self.rows)
         self.cols = Int((width / max(pixel, 0.5)).rounded(.up))
         self.reservedTrailingWidth = reservedTrailingWidth
-        self.style = SceneStyle.for(scene)
+        self.style = ScenePalette.for(scene)
     }
 
     // MARK: Background (sky → celestial → clouds → hills → trees → field)
@@ -337,125 +351,6 @@ struct SceneComposer {
             }
         }
     }
-}
-
-// MARK: - Per-scene styling
-
-private struct SceneStyle {
-    var farHill: UInt32
-    var hill: UInt32
-    var hillEdge: UInt32
-    var field: UInt32
-    var fieldLight: UInt32
-    var front: UInt32
-    var frontBlade: UInt32
-    var shadow: UInt32
-    var rainA: UInt32 = 0xA8CFF0
-    var rainB: UInt32 = 0x7FB3E3
-    var showsSun = false
-    var showsMoon = false
-    var showsStars = false
-    var cloudCount = 0
-    var stormClouds = false
-    var darkTrees = false
-    var rain = false
-    var snow = false
-    var fogBands = false
-    var lightning = false
-    var butterflies = false
-    var flowers = false
-
-    static func `for`(_ scene: PupScene) -> SceneStyle {
-        switch scene {
-        case .clearDay:
-            SceneStyle(farHill: 0x63C96B, hill: 0x3FA34D, hillEdge: 0x2C7A3B,
-                       field: 0x6FD44E, fieldLight: 0x8CE06B,
-                       front: 0x2F9E44, frontBlade: 0x54C05A, shadow: 0x3E9E3F,
-                       showsSun: true, cloudCount: 2, flowers: true)
-        case .warmDay:
-            SceneStyle(farHill: 0x63C96B, hill: 0x3FA34D, hillEdge: 0x2C7A3B,
-                       field: 0x6FD44E, fieldLight: 0x8CE06B,
-                       front: 0x2F9E44, frontBlade: 0x54C05A, shadow: 0x3E9E3F,
-                       showsSun: true, cloudCount: 2, butterflies: true, flowers: true)
-        case .cloudy:
-            SceneStyle(farHill: 0x57AE63, hill: 0x389447, hillEdge: 0x27703A,
-                       field: 0x63C24C, fieldLight: 0x7CD063,
-                       front: 0x2A8E3E, frontBlade: 0x4AAE52, shadow: 0x358E38,
-                       cloudCount: 5, flowers: true)
-        case .rain:
-            SceneStyle(farHill: 0x2E7A44, hill: 0x255F36, hillEdge: 0x1B4A29,
-                       field: 0x3C9145, fieldLight: 0x4EA455,
-                       front: 0x1E6B33, frontBlade: 0x2F8442, shadow: 0x1E6B33,
-                       cloudCount: 3, stormClouds: true, darkTrees: true, rain: true)
-        case .thunder:
-            SceneStyle(farHill: 0x235B37, hill: 0x1A4A2C, hillEdge: 0x123B21,
-                       field: 0x2C7038, fieldLight: 0x357E42,
-                       front: 0x143F22, frontBlade: 0x1F5A31, shadow: 0x143F22,
-                       rainA: 0x9DB8D9, rainB: 0x7A97BD,
-                       cloudCount: 3, stormClouds: true, darkTrees: true,
-                       rain: true, lightning: true)
-        case .rainNight:
-            SceneStyle(farHill: darken(0x2E7A44, 0.72), hill: darken(0x255F36, 0.72), hillEdge: darken(0x1B4A29, 0.72),
-                       field: darken(0x3C9145, 0.72), fieldLight: darken(0x4EA455, 0.72),
-                       front: darken(0x1E6B33, 0.72), frontBlade: darken(0x2F8442, 0.72), shadow: darken(0x1E6B33, 0.72),
-                       showsMoon: true, cloudCount: 3, stormClouds: true, darkTrees: true, rain: true)
-        case .thunderNight:
-            SceneStyle(farHill: darken(0x235B37, 0.78), hill: darken(0x1A4A2C, 0.78), hillEdge: darken(0x123B21, 0.78),
-                       field: darken(0x2C7038, 0.78), fieldLight: darken(0x357E42, 0.78),
-                       front: darken(0x143F22, 0.78), frontBlade: darken(0x1F5A31, 0.78), shadow: darken(0x143F22, 0.78),
-                       rainA: darken(0x9DB8D9, 0.8), rainB: darken(0x7A97BD, 0.8),
-                       showsMoon: true, cloudCount: 3, stormClouds: true, darkTrees: true,
-                       rain: true, lightning: true)
-        case .snow:
-            SceneStyle(farHill: 0xCFE6F7, hill: 0xBFDCF2, hillEdge: 0x9CC4E4,
-                       field: 0xF2FAFF, fieldLight: 0xFFFFFF,
-                       front: 0xD6EBFA, frontBlade: 0xEAF6FF, shadow: 0xBFDCF2,
-                       cloudCount: 3, snow: true)
-        case .snowNight:
-            // Hand-tuned rather than `darken()`: uniformly scaling the
-            // near-white day-snow palette desaturates it to flat grey. A
-            // moonlit blue tint keeps it reading as snow, not pavement.
-            SceneStyle(farHill: 0x3E5C78, hill: 0x2F4A64, hillEdge: 0x22384F,
-                       field: 0x4A6C8C, fieldLight: 0x6B90B4,
-                       front: 0x35516C, frontBlade: 0x496F90, shadow: 0x22384F,
-                       showsMoon: true, cloudCount: 3, darkTrees: true, snow: true)
-        case .fog:
-            SceneStyle(farHill: 0x7FA98B, hill: 0x6A9678, hillEdge: 0x557F63,
-                       field: 0x86B292, fieldLight: 0x97C2A2,
-                       front: 0x5E8A6C, frontBlade: 0x74A181, shadow: 0x5E8A6C,
-                       fogBands: true)
-        case .fogNight:
-            SceneStyle(farHill: darken(0x7FA98B, 0.5), hill: darken(0x6A9678, 0.5), hillEdge: darken(0x557F63, 0.5),
-                       field: darken(0x86B292, 0.5), fieldLight: darken(0x97C2A2, 0.5),
-                       front: darken(0x5E8A6C, 0.5), frontBlade: darken(0x74A181, 0.5), shadow: darken(0x5E8A6C, 0.5),
-                       showsMoon: true, darkTrees: true, fogBands: true)
-        case .night:
-            SceneStyle(farHill: 0x1C5B34, hill: 0x144A28, hillEdge: 0x0E3A1F,
-                       field: 0x1F6B38, fieldLight: 0x2A7C44,
-                       front: 0x0F4423, frontBlade: 0x1B5C31, shadow: 0x0F4423,
-                       showsMoon: true, showsStars: true, darkTrees: true)
-        }
-    }
-}
-
-/// Dims a day palette color for its night counterpart, keeping the same hue
-/// so night scenes read as "the same place after dark" rather than a
-/// different color scheme.
-private func darken(_ hex: UInt32, _ factor: Double) -> UInt32 {
-    func scale(_ shift: UInt32) -> UInt32 {
-        let c = Double((hex >> shift) & 0xFF)
-        return UInt32((c * factor).rounded()) << shift
-    }
-    return scale(16) | scale(8) | scale(0)
-}
-
-private func lerpHex(_ a: UInt32, _ b: UInt32, _ t: Double) -> UInt32 {
-    func mix(_ shift: UInt32) -> UInt32 {
-        let ca = Double((a >> shift) & 0xFF)
-        let cb = Double((b >> shift) & 0xFF)
-        return UInt32((ca + (cb - ca) * t).rounded()) << shift
-    }
-    return mix(16) | mix(8) | mix(0)
 }
 
 #if !RENDER_TOOL

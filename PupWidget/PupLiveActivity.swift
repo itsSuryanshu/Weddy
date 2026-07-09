@@ -6,7 +6,9 @@ struct PupLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: PupActivityAttributes.self) { context in
             LockScreenView(context: context)
-                .activityBackgroundTint(context.state.scene.skyTop)
+                .activityBackgroundTint(context.state.resolvedSceneStyle == .ascii
+                                        ? AsciiSceneRenderer.backdrop
+                                        : context.state.scene.skyTop)
                 .activitySystemActionForegroundColor(.white)
         } dynamicIsland: { _ in
             DynamicIsland {
@@ -39,19 +41,21 @@ private struct LockScreenView: View {
                      reservedTrailingWidth: WeatherBadgeMetrics.reservedWidth(
                          temperatureC: context.state.temperatureC,
                          label: context.state.scene.label,
-                         scale: badgeScale))
+                         scale: badgeScale),
+                     style: context.state.resolvedSceneStyle)
             .frame(maxWidth: .infinity, minHeight: 120)
             .overlay(alignment: .bottomTrailing) {
                 WeatherBadge(scene: context.state.scene,
                              temperatureC: context.state.temperatureC,
-                             scale: badgeScale)
+                             scale: badgeScale,
+                             style: context.state.resolvedSceneStyle)
                     .padding(.trailing, WeatherBadgeMetrics.trailingMargin)
                     .padding(.bottom, WeatherBadgeMetrics.bottomMargin)
             }
             .overlay(alignment: .bottomLeading) {
                 Text(context.attributes.locationName)
                     .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundStyle(context.state.scene.ink)
+                    .foregroundStyle(context.state.scene.ink(for: context.state.resolvedSceneStyle))
                     .lineLimit(1)
                     .padding(.leading, 10)
                     .padding(.bottom, WeatherBadgeMetrics.bottomMargin)

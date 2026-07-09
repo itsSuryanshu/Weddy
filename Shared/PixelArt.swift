@@ -46,17 +46,19 @@ struct PixelRandom {
 /// A pixel sprite "model": rows of palette characters. `.` is transparent.
 /// Sprites are data, not images — they rasterize into vector `Path`s at any
 /// pixel size, which is what lets them render inside a Live Activity.
+/// Palettes map characters to 0xRRGGBB values (not `Color`) so the ASCII
+/// renderer can derive glyph density from luminance deterministically.
 struct PixelSprite {
     let grid: [[Character]]
-    let palette: [Character: Color]
+    let palette: [Character: UInt32]
     let width: Int
     let height: Int
 
-    init(palette: [Character: Color], _ rows: [String]) {
+    init(palette: [Character: UInt32], _ rows: [String]) {
         self.init(palette: palette, grid: rows.map(Array.init))
     }
 
-    init(palette: [Character: Color], grid: [[Character]]) {
+    init(palette: [Character: UInt32], grid: [[Character]]) {
         self.grid = grid
         self.palette = palette
         self.width = grid.map(\.count).max() ?? 0
@@ -64,7 +66,7 @@ struct PixelSprite {
     }
 
     /// Same shape, different colors (e.g. trees at night).
-    func repainted(with palette: [Character: Color]) -> PixelSprite {
+    func repainted(with palette: [Character: UInt32]) -> PixelSprite {
         PixelSprite(palette: palette, grid: grid)
     }
 }
@@ -117,10 +119,11 @@ struct PixelPainter {
             var col = 0
             while col < chars.count {
                 let ch = chars[col]
-                guard let color = sprite.palette[ch], ch != "." else {
+                guard let hex = sprite.palette[ch], ch != "." else {
                     col += 1
                     continue
                 }
+                let color = Color(px: hex)
                 var run = 1
                 while col + run < chars.count && chars[col + run] == ch {
                     run += 1

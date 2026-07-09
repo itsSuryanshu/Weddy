@@ -16,17 +16,17 @@ enum PupSprites {
 
     // MARK: Dog palette
 
-    private static let dogPalette: [Character: Color] = [
-        "k": Color(px: 0x8A4715),  // outline
-        "o": Color(px: 0xF59B3D),  // coat
-        "O": Color(px: 0xFFBE6B),  // coat highlight
-        "d": Color(px: 0xD9772A),  // coat shade / ears
-        "c": Color(px: 0xFFDCA3),  // muzzle cream
-        "n": Color(px: 0x2B1608),  // nose
-        "e": Color(px: 0x1E1006),  // eyes
-        "t": Color(px: 0xFF6FA0),  // tongue
-        "b": Color(px: 0x4B7BEC),  // bandana
-        "B": Color(px: 0x2F55B8),  // bandana shade
+    private static let dogPalette: [Character: UInt32] = [
+        "k": 0x8A4715,  // outline
+        "o": 0xF59B3D,  // coat
+        "O": 0xFFBE6B,  // coat highlight
+        "d": 0xD9772A,  // coat shade / ears
+        "c": 0xFFDCA3,  // muzzle cream
+        "n": 0x2B1608,  // nose
+        "e": 0x1E1006,  // eyes
+        "t": 0xFF6FA0,  // tongue
+        "b": 0x4B7BEC,  // bandana
+        "B": 0x2F55B8,  // bandana shade
     ]
 
     // MARK: Dog poses
@@ -129,13 +129,13 @@ enum PupSprites {
 
     // MARK: Scenery
 
-    private static let treePalette: [Character: Color] = [
-        "k": Color(px: 0x1C5A2B),  // canopy outline
-        "g": Color(px: 0x3FA34D),  // canopy
-        "G": Color(px: 0x7DD181),  // canopy highlight
-        "s": Color(px: 0x2C7A3B),  // canopy shade
-        "t": Color(px: 0x7A4A21),  // trunk
-        "T": Color(px: 0x5C3317),  // trunk shade
+    private static let treePalette: [Character: UInt32] = [
+        "k": 0x1C5A2B,  // canopy outline
+        "g": 0x3FA34D,  // canopy
+        "G": 0x7DD181,  // canopy highlight
+        "s": 0x2C7A3B,  // canopy shade
+        "t": 0x7A4A21,  // trunk
+        "T": 0x5C3317,  // trunk shade
     ]
 
     static let tree = PixelSprite(palette: treePalette, [
@@ -166,21 +166,21 @@ enum PupSprites {
     ])
 
     /// Muted canopy for night / storm scenes.
-    private static let treeNightPalette: [Character: Color] = [
-        "k": Color(px: 0x0C2E16),
-        "g": Color(px: 0x1E5B33),
-        "G": Color(px: 0x2F7A45),
-        "s": Color(px: 0x164426),
-        "t": Color(px: 0x3A2410),
-        "T": Color(px: 0x2A1A0B),
+    private static let treeNightPalette: [Character: UInt32] = [
+        "k": 0x0C2E16,
+        "g": 0x1E5B33,
+        "G": 0x2F7A45,
+        "s": 0x164426,
+        "t": 0x3A2410,
+        "T": 0x2A1A0B,
     ]
 
     static let treeNight = tree.repainted(with: treeNightPalette)
     static let treeSmallNight = treeSmall.repainted(with: treeNightPalette)
 
     /// Sleepy Zzz for the night scene.
-    private static let zzzPalette: [Character: Color] = [
-        "z": Color(px: 0xCFE0FF)
+    private static let zzzPalette: [Character: UInt32] = [
+        "z": 0xCFE0FF
     ]
 
     static let zzz = PixelSprite(palette: zzzPalette, [
@@ -194,9 +194,9 @@ enum PupSprites {
         "zzz.....",
     ])
 
-    private static let cloudPalette: [Character: Color] = [
-        "w": Color(px: 0xFFFFFF),
-        "s": Color(px: 0xD8ECFA),  // soft blue underside
+    private static let cloudPalette: [Character: UInt32] = [
+        "w": 0xFFFFFF,
+        "s": 0xD8ECFA,  // soft blue underside
     ]
 
     static let cloud = PixelSprite(palette: cloudPalette, [
@@ -219,17 +219,17 @@ enum PupSprites {
     ])
 
     /// Dark storm cloud for rain / thunder scenes.
-    private static let stormPalette: [Character: Color] = [
-        "w": Color(px: 0x9DB2C7),
-        "s": Color(px: 0x6B8199),
+    private static let stormPalette: [Character: UInt32] = [
+        "w": 0x9DB2C7,
+        "s": 0x6B8199,
     ]
 
     static let stormCloud = cloud.repainted(with: stormPalette)
 
-    private static let sunPalette: [Character: Color] = [
-        "y": Color(px: 0xFFE066),  // core
-        "Y": Color(px: 0xFFF3B0),  // core highlight
-        "r": Color(px: 0xFFD23E),  // rays
+    private static let sunPalette: [Character: UInt32] = [
+        "y": 0xFFE066,  // core
+        "Y": 0xFFF3B0,  // core highlight
+        "r": 0xFFD23E,  // rays
     ]
 
     static let sun = PixelSprite(palette: sunPalette, [
@@ -248,9 +248,9 @@ enum PupSprites {
         "......r.......",
     ])
 
-    private static let moonPalette: [Character: Color] = [
-        "m": Color(px: 0xFFF6C9),
-        "M": Color(px: 0xE8D89A),  // craters
+    private static let moonPalette: [Character: UInt32] = [
+        "m": 0xFFF6C9,
+        "M": 0xE8D89A,  // craters
     ]
 
     static let moon = PixelSprite(palette: moonPalette, [
@@ -265,12 +265,12 @@ enum PupSprites {
         "...mmmmmm.",
     ])
 
-    private static func butterflyPalette(_ wing: UInt32, _ shade: UInt32) -> [Character: Color] {
+    private static func butterflyPalette(_ wing: UInt32, _ shade: UInt32) -> [Character: UInt32] {
         [
-            "w": Color(px: wing),
-            "W": Color(px: 0xFFFFFF),  // wing spot
-            "s": Color(px: shade),
-            "b": Color(px: 0x2B1608),  // body
+            "w": wing,
+            "W": 0xFFFFFF,  // wing spot
+            "s": shade,
+            "b": 0x2B1608,  // body
         ]
     }
 
@@ -290,9 +290,9 @@ enum PupSprites {
     static let butterflyOrange = PixelSprite(
         palette: butterflyPalette(0xFF8C42, 0xE05B2B), butterflyGrid)
 
-    private static let boltPalette: [Character: Color] = [
-        "y": Color(px: 0xFFE066),
-        "Y": Color(px: 0xFFF7CC),
+    private static let boltPalette: [Character: UInt32] = [
+        "y": 0xFFE066,
+        "Y": 0xFFF7CC,
     ]
 
     static let lightning = PixelSprite(palette: boltPalette, [
@@ -306,9 +306,9 @@ enum PupSprites {
         "Yy.....",
     ])
 
-    private static let flowerPalette: [Character: Color] = [
-        "p": Color(px: 0xFFD23E),  // petals
-        "c": Color(px: 0xFF8C42),  // center
+    private static let flowerPalette: [Character: UInt32] = [
+        "p": 0xFFD23E,  // petals
+        "c": 0xFF8C42,  // center
     ]
 
     static let flower = PixelSprite(palette: flowerPalette, [
