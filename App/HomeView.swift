@@ -5,7 +5,6 @@ struct HomeView: View {
     /// nil = mirror the live weather; otherwise browse a specific scene.
     @State private var previewScene: PupScene?
     @State private var previewLayout = SceneLayout.makeInitial(for: .clearDay)
-    @State private var isShowingAddLocationSheet = false
 
     /// In-app preview wanders much faster than the Live Activity so the
     /// scene feels alive while you watch it — every few seconds the dog
@@ -72,17 +71,6 @@ struct HomeView: View {
             }
             .listStyle(.plain)
             .navigationTitle("PupWeather")
-            .overlay(alignment: .bottomTrailing) {
-                addLocationButton
-            }
-            .sheet(isPresented: $isShowingAddLocationSheet) {
-                LocationPickerView(
-                    mode: .add,
-                    alreadyTrackedIDs: Set(manager.trackedLocations.map(\.id))
-                ) { selection in
-                    Task { await manager.addLocation(selection) }
-                }
-            }
             .task {
                 await manager.ensureActivityRunning()
             }
@@ -161,22 +149,6 @@ struct HomeView: View {
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
     }
 
-    private var addLocationButton: some View {
-        Button {
-            isShowingAddLocationSheet = true
-        } label: {
-            Image(systemName: "plus")
-                .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(.white)
-                .frame(width: 56, height: 56)
-        }
-        .glassButton(tint: .orange, in: Circle())
-        .padding(.trailing, 20)
-        .padding(.bottom, 20)
-        .accessibilityLabel("Add location")
-        .disabled(manager.trackedLocations.count >= LiveActivityManager.maxTrackedLocations)
-        .opacity(manager.trackedLocations.count >= LiveActivityManager.maxTrackedLocations ? 0.4 : 1)
-    }
 }
 
 /// One tracked location's weather + Live Activity status. Reads its state
